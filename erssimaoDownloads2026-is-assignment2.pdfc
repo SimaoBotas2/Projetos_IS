@@ -1,0 +1,90 @@
+[33mcommit 7e10e822dc512f4e179f9305f238276c837b6ef3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mcontainers[m[33m, [m[1;31morigin/containers[m[33m)[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Fri Mar 6 13:34:22 2026 +0000
+
+    added python functions to create graphs
+
+[33mcommit ab7cd856057a48c9493e9ee9c7de639c96d8fbac[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Mar 5 22:31:56 2026 +0000
+
+    aaaaa
+
+[33mcommit 8d812feb4ae6fc5e5ef6a7cb829418b04dbfe94c[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Mar 5 22:23:00 2026 +0000
+
+    idk whats going on
+
+[33mcommit 1985a40c0b7f5c85ff6825a46fda6efef7a4142a[m[33m ([m[1;32mmain[m[33m)[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Mar 5 20:52:53 2026 +0000
+
+    Update Results.md and Sender.java for XML processing; adjust Docker Compose resource limits and record counts
+
+[33mcommit aba122fd22bae05d6d7a6c3acffae65e0b644e0d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Mar 5 20:35:35 2026 +0000
+
+    Xml nos containers, mudado o codigo para rodar 10k, 100k e 500k
+
+[33mcommit c0237e9a201e0cb281da925143a2017f0cdb149e[m
+Merge: 15515e3 29d4241
+Author: SimaoBotas <118204700+SimaoBotas@users.noreply.github.com>
+Date:   Thu Mar 5 20:29:14 2026 +0000
+
+    Merge pull request #1 from SimaoBotas/vm_setup
+    
+    vm_setup
+
+[33mcommit 29d4241b1937e31560db3e2491aaedb0ab4d3f27[m[33m ([m[1;31morigin/vm_setup[m[33m)[m
+Author: André Rodrigues <uc2025138984@student.uc.pt>
+Date:   Sun Mar 1 20:04:21 2026 +0000
+
+    vm_setup
+    
+    Codigo para serialização e deserialização de packages de xml e json
+
+[33mcommit 15515e3d5814ce87ecaaf88c61c00283a8a538e8[m[33m ([m[1;31morigin/container_setup[m[33m)[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Fri Feb 27 12:32:24 2026 +0000
+
+    Mudanças no containers e no docker compose - adicionado limite de recursos
+
+[33mcommit 2bbcc523fb010bd5b61213544e91e91fe4847ef0[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Feb 26 19:22:54 2026 +0000
+
+    Update results and readme dos containers
+
+[33mcommit 88a7d9a49692ca233e3b57e909734ae3ec68682f[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Feb 26 18:48:31 2026 +0000
+
+    Setup inicial dos containers
+
+[33mcommit 6d171f2127135853133942c3e979b7236f3602d5[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Feb 26 18:22:30 2026 +0000
+
+    Correção das pastas
+
+[33mcommit 59d49ce805feaa675f29437ee41c92c4f12a2dcb[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Feb 26 18:21:07 2026 +0000
+
+    Added readme for projeto 1
+
+[33mcommit efa3b8b0e90b06421c7d88e92edaebd564a99639[m
+Author: Simão Botas <botassimao@gmail.com>
+Date:   Thu Feb 26 18:14:13 2026 +0000
+
+    Commit do primeiro codigo de Java
+
+[33mcommit c1c8a2afe8e758fad39126b5fe489b87cfb2640f[m
+Author: SimaoBotas <118204700+SimaoBotas@users.noreply.github.com>
+Date:   Thu Feb 19 18:25:54 2026 +0000
+
+    Update README to include project description
+    
+    Added a description for the IS repository.

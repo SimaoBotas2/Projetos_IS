@@ -1,0 +1,99 @@
+services:
+  # XML Services
+  sender-xml-10k:
+    build:
+      context: ..
+      dockerfile: setup/Dockerfile
+    environment:
+      RECORD_COUNT: "10000"
+    command: ["java", "Sender"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'          # Número de cores (ex: 0.5, 1, 2)
+          memory: 4G         # RAM máxima
+        reservations:
+          cpus: '1'          # Cores reservados (mínimo)
+          memory: 4G         # RAM reservada (mínimo)
+
+  sender-xml-100k:
+    build:
+      context: ..
+      dockerfile: setup/Dockerfile
+    environment:
+      RECORD_COUNT: "100000"
+    command: ["java", "Sender"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'          # Número de cores (ex: 0.5, 1, 2)
+          memory: 4G         # RAM máxima
+        reservations:
+          cpus: '1'          # Cores reservados (mínimo)
+          memory: 4G         # RAM reservada (mínimo)
+
+  sender-xml-250k:
+    build:
+      context: ..
+      dockerfile: setup/Dockerfile
+    environment:
+      RECORD_COUNT: "250000"
+    command: ["java", "Sender"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'          # Número de cores (ex: 0.5, 1, 2)
+          memory: 4G         # RAM máxima
+        reservations:
+          cpus: '1'          # Cores reservados (mínimo)
+          memory: 4G         # RAM reservada (mínimo)
+
+  # JSON Services
+
+  main-json-10k:
+    build:
+      context: ..
+      dockerfile: setup/Dockerfile.json
+    environment:
+      RECORD_COUNT: "10000"
+    command: ["java", "-cp", ".:./lib/*", "Main"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'          # Número de cores (ex: 0.5, 1, 2)
+          memory: 4G         # RAM máxima
+        reservations:
+          cpus: '1'          # Cores reservados (mínimo)
+          memory: 4G         # RAM reservada (mínimo)
+
+  main-json-100k:
+    build:
+      context: ..
+      dockerfile: setup/Dockerfile.json
+    environment:
+      RECORD_COUNT: "100000"
+    command: ["java", "-cp", ".:./lib/*", "Main"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'          # Número de cores (ex: 0.5, 1, 2)
+          memory: 4G         # RAM máxima
+        reservations:
+          cpus: '1'          # Cores reservados (mínimo)
+          memory: 4G         # RAM reservada (mínimo)
+
+  main-json-250k:
+    build:
+      context: ..
+      dockerfile: setup/Dockerfile.json
+    environment:
+      RECORD_COUNT: "250000"
+    command: ["java", "-cp", ".:./lib/*", "Main"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'          # Número de cores (ex: 0.5, 1, 2)
+          memory: 4G         # RAM máxima
+        reservations:
+          cpus: '1'          # Cores reservados (mínimo)
+          memory: 4G         # RAM reservada (mínimo)

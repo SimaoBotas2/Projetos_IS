@@ -1,0 +1,20 @@
+FROM eclipse-temurin:17-jdk-jammy
+
+WORKDIR /app
+
+# Install Maven to download jackson-databind
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+# Create a minimal pom.xml to download Jackson dependencies
+COPY json/pom.xml ./
+RUN mvn dependency:copy-dependencies -DoutputDirectory=./lib || true
+
+# Copy Java source files
+COPY json/src/*.java ./
+
+# Compile with Jackson in the classpath (include current dir for class references)
+RUN javac -cp ".:./lib/*" *.java
+
+EXPOSE 5001
+
+CMD ["java", "-cp", ".:./lib/*", "Receiver"]
