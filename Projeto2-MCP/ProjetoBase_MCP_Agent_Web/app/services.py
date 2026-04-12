@@ -1,6 +1,41 @@
 from sqlmodel import Session, select
 
-from app.models import Book, BookCreate, BookUpdate
+from app.models import Book, BookCreate, BookUpdate, Author, AuthorCreate, AuthorUpdate
+
+class AuthorNotFoundError(Exception):
+    pass
+
+def list_authors(session: Session) -> list[Author]:
+    return session.exec(select(Author)).all()
+
+def get_author(session: Session, author_id: int) -> Author:
+    author = session.get(Author, author_id)
+    if author is None:
+        raise AuthorNotFoundError(f"Author {author_id} not found")
+    return author
+
+def create_author(session: Session, data: AuthorCreate) -> Author:
+    author = Author.model_validate(data)
+    session.add(author)
+    session.commit()
+    session.refresh(author)
+    return author
+
+def update_author(session:Session, author_id: int, data: AuthorUpdate) -> Author:
+    author = get_author(session, author_id)
+    update = data.model_dump(exclude_unset=True)
+    for key, value in update.items():
+        setattr(author, key, value)
+    session.add(author)
+    session.commit()
+    session.refresh(author)
+    return author
+
+def delete_author(session: Session, author_id: int) -> dict:
+    author = get_author(session, author_id)
+    session.delete(author)
+    session.commit()
+    return {"status": "deleted", "id": author_id}
 
 
 class BookNotFoundError(Exception):

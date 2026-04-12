@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 from sqlmodel import Session
 
 from app.db import create_db_and_tables, engine
-from app.models import BookCreate, BookUpdate
+from app.models import BookCreate, BookUpdate, AuthorCreate, AuthorUpdate
 from app.services import (
     BookNotFoundError,
     create_book,
@@ -10,6 +10,12 @@ from app.services import (
     get_book,
     list_books,
     update_book,
+    AuthorNotFoundError,
+    create_author,
+    delete_author,
+    get_author,
+    list_authors,
+    update_author,
 )
 
 mcp = FastMCP(name="LibraryMCPServer")
@@ -102,6 +108,79 @@ def catalog_summary() -> str:
             for book in books
         )
 
+#Authors methods
+
+@mcp.tool()
+def list_authors_tool() -> list[dict]:
+    """List all authors in the catalog."""
+    with Session(engine) as session:
+        return [author.model_dump() for author in list_authors(session)]
+    
+@mcp.tool()
+def get_author_tool(author_id) -> dict:
+    """Get a single author by id."""
+    with Session(engine) as session:
+        try:
+            return get_author(session, author_id).model_dump()
+        except AuthorNotFoundError as exc:
+            return {"error": str(exc)}
+        
+@mcp.tool()
+def create_author_tool(name: str, age: int, country: str) -> dict:
+    """Create a new author in the catalog."""
+    with Session(engine) as session:
+        author = create_author(
+            session,
+            AuthorCreate(name=name, age=age, country=country),
+        )
+        return author.model_dump()
+
+
+@mcp.tool()
+def update_author_tool(
+    author_id: int,
+    name: str | None = None,
+    age: int | None = None,
+    country: str | None = None
+) -> dict:
+    """Update a author in the catalog."""
+    with Session(engine) as session:
+        try:
+            author = update_author(
+                session,
+                author_id,
+                AuthorUpdate(
+                    name=name,
+                    age=age,
+                    country=country
+                ),
+            )
+            return author.model_dump()
+        except AuthorNotFoundError as exc:
+            return {"error": str(exc)}
+
+
+@mcp.tool()
+def delete_author_tool(author_id: int) -> dict:
+    """Delete a author from the catalog."""
+    with Session(engine) as session:
+        try:
+            return delete_author(session, author_id)
+        except AuthorNotFoundError as exc:
+            return {"error": str(exc)}
+
+
+@mcp.resource("library://authors-summary")
+def authors_summary() -> str:
+    """Return a plain-text summary of the current authors."""
+    with Session(engine) as session:
+        authors = list_authors(session)
+        if not authors:
+            return "There are no authors available."
+        return "\n".join(
+            f"{author.id}: {author.name} age {author.age} from ({author.country})"
+            for author in authors
+        )
 
 if __name__ == "__main__":
     mcp.run(transport="sse", host="127.0.0.1", port=8002)
