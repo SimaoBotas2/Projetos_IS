@@ -4,18 +4,19 @@ from sqlmodel import Session
 from app.db import create_db_and_tables, engine
 from app.models import BookCreate, BookUpdate, AuthorCreate, AuthorUpdate
 from app.services import (
-    BookNotFoundError,
-    create_book,
-    delete_book,
-    get_book,
-    list_books,
-    update_book,
+    AuthorHasBooksError,
     AuthorNotFoundError,
+    BookNotFoundError,
     create_author,
+    create_book,
     delete_author,
+    delete_book,
     get_author,
+    get_book,
     list_authors,
+    list_books,
     update_author,
+    update_book,
 )
 
 mcp = FastMCP(name="LibraryMCPServer")
@@ -50,25 +51,28 @@ def library_assistant_prompt(user_name: str = "User") -> str:
 
 
 @mcp.tool()
-def create_book_tool(title: str, author: str, year: int, available: bool = True) -> dict:
-    """Create a new book in the catalog."""
+def create_book_tool(title: str, author_id: int, year: int, available: bool = True) -> dict:
+    """Create a new book in the catalog using an existing author id."""
     with Session(engine) as session:
-        book = create_book(
-            session,
-            BookCreate(title=title, author=author, year=year, available=available),
-        )
-        return book.model_dump()
+        try:
+            book = create_book(
+                session,
+                BookCreate(title=title, author_id=author_id, year=year, available=available),
+            )
+            return book.model_dump()
+        except (AuthorNotFoundError, ValueError) as exc:
+            return {"error": str(exc)}
 
 
 @mcp.tool()
 def update_book_tool(
     book_id: int,
     title: str | None = None,
-    author: str | None = None,
+    author_id: int | None = None,
     year: int | None = None,
     available: bool | None = None,
 ) -> dict:
-    """Update a book in the catalog."""
+    """Update a book in the catalog, including changing its linked author."""
     with Session(engine) as session:
         try:
             book = update_book(
@@ -76,13 +80,13 @@ def update_book_tool(
                 book_id,
                 BookUpdate(
                     title=title,
-                    author=author,
+                    author_id=author_id,
                     year=year,
                     available=available,
                 ),
             )
             return book.model_dump()
-        except BookNotFoundError as exc:
+        except (BookNotFoundError, AuthorNotFoundError, ValueError) as exc:
             return {"error": str(exc)}
 
 
@@ -117,7 +121,7 @@ def list_authors_tool() -> list[dict]:
         return [author.model_dump() for author in list_authors(session)]
     
 @mcp.tool()
-def get_author_tool(author_id) -> dict:
+def get_author_tool(author_id: int) -> dict:
     """Get a single author by id."""
     with Session(engine) as session:
         try:
@@ -162,11 +166,11 @@ def update_author_tool(
 
 @mcp.tool()
 def delete_author_tool(author_id: int) -> dict:
-    """Delete a author from the catalog."""
+    """Delete an author from the catalog."""
     with Session(engine) as session:
         try:
             return delete_author(session, author_id)
-        except AuthorNotFoundError as exc:
+        except (AuthorNotFoundError, AuthorHasBooksError) as exc:
             return {"error": str(exc)}
 
 

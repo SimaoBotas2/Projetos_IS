@@ -26,8 +26,10 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 if not GOOGLE_API_KEY:
     raise ValueError("Define GOOGLE_API_KEY ou GEMINI_API_KEY no ficheiro .env")
 
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
 # ── LLM ───────────────────────────────────────────────────────────────────────
-llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", google_api_key=GOOGLE_API_KEY) #gemini-2.5-flash , ir trocando de modelo se chegar ao limite gratuito https://ai.google.dev/gemini-api/docs/models/
+llm = ChatGoogleGenerativeAI(model=MODEL_NAME, google_api_key=GOOGLE_API_KEY)
 
 # ── MEMORY (persists across requests for the same thread_id) ──────────────────
 memory = InMemorySaver()

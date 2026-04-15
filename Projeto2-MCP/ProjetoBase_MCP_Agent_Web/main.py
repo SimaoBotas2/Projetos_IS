@@ -4,18 +4,19 @@ from sqlmodel import Session
 from app.db import create_db_and_tables, get_session
 from app.models import BookCreate, BookUpdate, AuthorCreate, AuthorUpdate
 from app.services import (
-    BookNotFoundError,
-    create_book,
-    delete_book,
-    get_book,
-    list_books,
-    update_book,
+    AuthorHasBooksError,
     AuthorNotFoundError,
+    BookNotFoundError,
     create_author,
+    create_book,
     delete_author,
+    delete_book,
     get_author,
+    get_book,
     list_authors,
+    list_books,
     update_author,
+    update_book,
 )
 
 app = FastAPI(title="Library REST API")
@@ -53,7 +54,10 @@ def read_book(book_id: int, session: Session = Depends(get_session)):
 
 @app.post("/books")
 def create_book_endpoint(data: BookCreate, session: Session = Depends(get_session)):
-    return create_book(session, data)
+    try:
+        return create_book(session, data)
+    except (AuthorNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.patch("/books/{book_id}")
@@ -64,6 +68,8 @@ def update_book_endpoint(
         return update_book(session, book_id, data)
     except BookNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (AuthorNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.delete("/books/{book_id}")
@@ -83,8 +89,8 @@ def read_authors(session: Session = Depends(get_session)):
 def read_author(author_id: int, session: Session = Depends(get_session)):
     try:
         return get_author(session, author_id)
-    except AuthorNotFoundError as exec:
-        raise HTTPException(status_code=404, detail=str(exec)) from exec
+    except AuthorNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     
 @app.post("/authors")
 def create_author_endpoint(data: AuthorCreate, session: Session = Depends(get_session)):
@@ -94,15 +100,17 @@ def create_author_endpoint(data: AuthorCreate, session: Session = Depends(get_se
 def update_author_endpoint(author_id: int, data: AuthorUpdate, session: Session = Depends(get_session)):
     try:
         return update_author(session, author_id, data)
-    except AuthorNotFoundError as exec:
-        raise HTTPException(status_code=404, detail=str(exec)) from exec
+    except AuthorNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     
 @app.delete("/authors/{author_id}")
 def delete_author_endpoint(author_id: int, session: Session = Depends(get_session)):
     try:
         return delete_author(session, author_id)
-    except AuthorNotFoundError as exec:
-        raise HTTPException(status_code=404, detail=str(exec)) from exec
+    except AuthorNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except AuthorHasBooksError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 if __name__ == "__main__":
