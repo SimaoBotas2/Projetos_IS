@@ -1,3 +1,5 @@
+import traceback
+
 from fastmcp import FastMCP
 from sqlmodel import Session
 
@@ -8,6 +10,7 @@ from app.services import (
     AuthorNotFoundError,
     BookNotFoundError,
     create_author,
+    create_author_from_text,
     create_book,
     delete_author,
     delete_book,
@@ -37,7 +40,9 @@ def get_book_tool(book_id: int) -> dict:
         try:
             return get_book(session, book_id).model_dump()
         except BookNotFoundError as exc:
-            return {"error": str(exc)}
+            print(f"MCP ERROR in get_book_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.prompt()
@@ -46,7 +51,9 @@ def library_assistant_prompt(user_name: str = "User") -> str:
     return (
         f"You are a helpful library assistant helping {user_name}. "
         "Use the available tools to manage the catalog and answer questions about books. "
-        "Prefer answers grounded in the catalog summary resource when possible."
+        "Prefer answers grounded in the catalog summary resource when possible. "
+        "When creating authors, use create_author_tool if the age is provided as a number, "
+        "and use create_author_from_text_tool if the age is provided as text or quoted text."
     )
 
 
@@ -61,7 +68,9 @@ def create_book_tool(title: str, author_id: int, year: int, available: bool = Tr
             )
             return book.model_dump()
         except (AuthorNotFoundError, ValueError) as exc:
-            return {"error": str(exc)}
+            print(f" MCP ERROR in create_book_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.tool()
@@ -87,7 +96,9 @@ def update_book_tool(
             )
             return book.model_dump()
         except (BookNotFoundError, AuthorNotFoundError, ValueError) as exc:
-            return {"error": str(exc)}
+            print(f" MCP ERROR in update_book_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.tool()
@@ -97,7 +108,9 @@ def delete_book_tool(book_id: int) -> dict:
         try:
             return delete_book(session, book_id)
         except BookNotFoundError as exc:
-            return {"error": str(exc)}
+            print(f"MCP ERROR in delete_book_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.resource("library://catalog-summary")
@@ -127,17 +140,31 @@ def get_author_tool(author_id: int) -> dict:
         try:
             return get_author(session, author_id).model_dump()
         except AuthorNotFoundError as exc:
-            return {"error": str(exc)}
+            print(f"MCP ERROR in get_author_tool: {exc}")
+            traceback.print_exc()
+            raise
         
 @mcp.tool()
 def create_author_tool(name: str, age: int, country: str) -> dict:
-    """Create a new author in the catalog."""
+    """Create a new author in the catalog using an integer age."""
     with Session(engine) as session:
         author = create_author(
             session,
             AuthorCreate(name=name, age=age, country=country),
         )
         return author.model_dump()
+
+
+@mcp.tool()
+def create_author_from_text_tool(name: str, age_text: str, country: str) -> dict:
+    """Create a new author in the catalog using age as text."""
+    with Session(engine) as session:
+        try:
+            return create_author_from_text(session, name=name, age_text=age_text, country=country)
+        except ValueError as exc:
+            print(f"MCP ERROR in create_author_from_text_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.tool()
@@ -161,7 +188,9 @@ def update_author_tool(
             )
             return author.model_dump()
         except AuthorNotFoundError as exc:
-            return {"error": str(exc)}
+            print(f"MCP ERROR in update_author_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.tool()
@@ -171,7 +200,9 @@ def delete_author_tool(author_id: int) -> dict:
         try:
             return delete_author(session, author_id)
         except (AuthorNotFoundError, AuthorHasBooksError) as exc:
-            return {"error": str(exc)}
+            print(f" MCP ERROR in delete_author_tool: {exc}")
+            traceback.print_exc()
+            raise
 
 
 @mcp.resource("library://authors-summary")

@@ -25,6 +25,22 @@ def _validate_book_year(year: int) -> None:
         raise ValueError("Year cannot be in the future")
 
 
+def _parse_author_age_text(age_text: str) -> int:
+    cleaned = age_text.strip()
+    if not cleaned:
+        raise ValueError("Age text cannot be empty")
+
+    try:
+        age = int(cleaned)
+    except ValueError as exc:
+        raise ValueError("Age text must contain a valid integer") from exc
+
+    if age < 0:
+        raise ValueError("Age must be a positive number")
+
+    return age
+
+
 def list_authors(session: Session) -> list[Author]:
     return session.exec(select(Author)).all()
 
@@ -42,6 +58,17 @@ def create_author(session: Session, data: AuthorCreate) -> Author:
     session.commit()
     session.refresh(author)
     return author
+
+
+def create_author_from_text(session: Session, name: str, age_text: str, country: str) -> dict:
+    age = _parse_author_age_text(age_text)
+    author = create_author(
+        session,
+        AuthorCreate(name=name, age=age, country=country),
+    )
+    result = author.model_dump()
+    result["age_text"] = age_text
+    return result
 
 
 def update_author(session: Session, author_id: int, data: AuthorUpdate) -> Author:

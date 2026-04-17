@@ -19,8 +19,6 @@ if not exist "%PYTHON_EXE%" (
 )
 
 echo A iniciar os 3 servicos do projeto...
-echo Vais ver 3 janelas de terminal separadas com os logs de cada servico.
-echo.
 
 start "Library REST API" cmd /k "cd /d "%APP_DIR%" && "%PYTHON_EXE%" main.py"
 timeout /t 2 /nobreak >nul
@@ -39,16 +37,12 @@ call :check_http "REST API" "http://127.0.0.1:8001/" "Get"
 call :check_http "MCP SSE" "http://127.0.0.1:8002/sse" "Head"
 call :check_http "Agent API" "http://127.0.0.1:8000/health" "Get"
 echo ====================================================
-echo.
-echo Se algum servico aparecer como FAIL, olha para a janela respetiva.
-echo.
 echo Enderecos:
 echo - REST API:  http://127.0.0.1:8001
 echo - MCP SSE:   http://127.0.0.1:8002/sse
 echo - Agent API: http://127.0.0.1:8000
 echo.
 echo A webapp foi aberta no browser por defeito.
-echo Podes fechar esta janela.
 pause
 goto :eof
 
