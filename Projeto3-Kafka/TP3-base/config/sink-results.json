@@ -1,0 +1,20 @@
+{
+    "name": "jdbc-sink-analytics-results",
+    "config": {
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results",
+        "auto.create": "true",
+        "insert.mode": "insert",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "ValueToKey,ExtractField",
+        "transforms.ValueToKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
+        "transforms.ValueToKey.fields": "metric_name",
+        "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
+        "transforms.ExtractField.fields": "metric_name,key,value,timestamp"
+    }
+}

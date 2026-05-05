@@ -1,0 +1,14 @@
+{
+    "name": "jdbc-source-dbinfo",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+        "connection.url": "jdbc:postgresql://database:5432/project3",
+        "connection.user": "postgres",
+        "connection.password": "nopass",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "mode": "bulk",
+        "query": "SELECT 'country_list' as type, json_agg(json_build_object('id', id, 'name', name, 'region', region)) as countries, NULL as books FROM countries UNION ALL SELECT 'book_list' as type, NULL as countries, json_agg(json_build_object('id', id, 'title', title, 'year', year, 'available', available, 'cost_price', cost_price, 'sale_price', sale_price)) as books FROM books;",
+        "poll.interval.ms": "60000",
+        "topic.prefix": "DBInfo"
+    }
+}
