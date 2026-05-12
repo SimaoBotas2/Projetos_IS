@@ -15,6 +15,6 @@
         "transforms.ValueToKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
         "transforms.ValueToKey.fields": "metric_name",
         "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
-        "transforms.ExtractField.fields": "metric_name,key,value,timestamp"
+        "transforms.ExtractField.field": "metric_name,key,value,timestamp"
     }
 }

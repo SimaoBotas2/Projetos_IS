@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public class PurchaseEventSerde {
+class PurchaseEventSerde {
     private static final Gson gson = new Gson();
 
     public static class PurchaseEventSerializer implements Serializer<PurchaseEvent> {

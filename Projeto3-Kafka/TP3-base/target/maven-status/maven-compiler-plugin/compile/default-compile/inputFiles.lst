@@ -1,0 +1,7 @@
+/workspace/src/main/java/is/project3/PurchaseEvent.java
+/workspace/src/main/java/is/project3/ResultEvent.java
+/workspace/src/main/java/is/project3/PurchaseEventProducer.java
+/workspace/src/main/java/is/project3/ProjetoBase3Streams.java
+/workspace/src/main/java/is/project3/SaleEvent.java
+/workspace/src/main/java/is/project3/SaleEventProducer.java
+/workspace/src/main/java/is/project3/EventSerdes.java

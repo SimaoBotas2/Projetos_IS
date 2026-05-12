@@ -203,11 +203,13 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
+            .map((k, v) -> new KeyValue<>("top", v))
+            .groupByKey(Grouped.with(Serdes.String(), Serdes.Double()))
             .reduce((v1, v2) -> v1 >= v2 ? v1 : v2)
             .toStream()
             .map((k, v) -> new KeyValue<>(
                 "",
-                new ResultEvent("top-profit-book", "book_" + k, v, System.currentTimeMillis())
+                new ResultEvent("top-profit-book", "top_book", v, System.currentTimeMillis())
             ))
             .to("Results", Produced.with(Serdes.String(), resultSerde));
 
@@ -217,7 +219,7 @@ public class ProjetoBase3Streams {
         sales
             .map((k, v) -> new KeyValue<>("total", v))
             .groupByKey(Grouped.with(Serdes.String(), saleSerde))
-            .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofHours(1), Duration.ofMinutes(10)))
+            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
             .aggregate(
                 () -> 0.0,
                 (key, sale, aggr) -> aggr + (sale.price * sale.quantity),
@@ -239,7 +241,7 @@ public class ProjetoBase3Streams {
         purchases
             .map((k, v) -> new KeyValue<>("total", v))
             .groupByKey(Grouped.with(Serdes.String(), purchaseSerde))
-            .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofHours(1), Duration.ofMinutes(10)))
+            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
             .aggregate(
                 () -> 0.0,
                 (key, purchase, aggr) -> aggr + (purchase.cost * purchase.quantity),
