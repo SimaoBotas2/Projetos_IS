@@ -4,11 +4,12 @@ from fastmcp import FastMCP
 from sqlmodel import Session
 
 from app.db import create_db_and_tables, engine
-from app.models import BookCreate, BookUpdate, AuthorCreate, AuthorUpdate
+from app.models import BookCreate, BookUpdate, AuthorCreate, AuthorUpdate, CountryCreate, CountryUpdate
 from app.services import (
     AuthorHasBooksError,
     AuthorNotFoundError,
     BookNotFoundError,
+    CountryNotFoundError,
     create_author,
     create_author_from_text,
     create_book,
@@ -20,6 +21,11 @@ from app.services import (
     list_books,
     update_author,
     update_book,
+    create_country,
+    get_country,
+    list_countries,
+    update_country,
+    delete_country,
 )
 
 mcp = FastMCP(name="LibraryMCPServer")
@@ -216,6 +222,90 @@ def authors_summary() -> str:
             f"{author.id}: {author.name} age {author.age} from ({author.country})"
             for author in authors
         )
+
+
+# Country CRUD Tools (for assignment requirements #1-2)
+
+@mcp.tool()
+def list_countries_tool() -> list[dict]:
+    """List all countries in the database. Requirement #2: List countries."""
+    with Session(engine) as session:
+        return [country.model_dump() for country in list_countries(session)]
+
+
+@mcp.tool()
+def get_country_tool(country_id: int) -> dict:
+    """Get a single country by id."""
+    with Session(engine) as session:
+        try:
+            return get_country(session, country_id).model_dump()
+        except CountryNotFoundError as exc:
+            print(f"MCP ERROR in get_country_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def create_country_tool(name: str, region: str) -> dict:
+    """Create a new country. Requirement #1: Add countries to the database."""
+    with Session(engine) as session:
+        try:
+            country = create_country(
+                session,
+                CountryCreate(name=name, region=region),
+            )
+            return country.model_dump()
+        except ValueError as exc:
+            print(f"MCP ERROR in create_country_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def update_country_tool(
+    country_id: int,
+    name: str | None = None,
+    region: str | None = None,
+) -> dict:
+    """Update a country in the database."""
+    with Session(engine) as session:
+        try:
+            country = update_country(
+                session,
+                country_id,
+                CountryUpdate(name=name, region=region),
+            )
+            return country.model_dump()
+        except CountryNotFoundError as exc:
+            print(f"MCP ERROR in update_country_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def delete_country_tool(country_id: int) -> dict:
+    """Delete a country from the database."""
+    with Session(engine) as session:
+        try:
+            return delete_country(session, country_id)
+        except CountryNotFoundError as exc:
+            print(f"MCP ERROR in delete_country_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.resource("library://countries-summary")
+def countries_summary() -> str:
+    """Return a plain-text summary of countries in the database."""
+    with Session(engine) as session:
+        countries = list_countries(session)
+        if not countries:
+            return "There are no countries in the database."
+        return "\n".join(
+            f"{country.id}: {country.name} ({country.region})"
+            for country in countries
+        )
+
 
 if __name__ == "__main__":
     mcp.run(transport="sse", host="127.0.0.1", port=8002)

@@ -3,10 +3,9 @@ from datetime import datetime
 from sqlmodel import Session, select
 
 from app.models import (
-    Author, AuthorCreate, AuthorUpdate, 
+    Author, AuthorCreate, AuthorUpdate,
     Book, BookCreate, BookUpdate,
     Country, CountryCreate, CountryUpdate,
-    Item, ItemCreate, ItemUpdate
 )
 
 
@@ -23,10 +22,6 @@ class BookNotFoundError(Exception):
 
 
 class CountryNotFoundError(Exception):
-    pass
-
-
-class ItemNotFoundError(Exception):
     pass
 
 
@@ -188,3 +183,21 @@ def create_country(session: Session, data: CountryCreate) -> Country:
     session.commit()
     session.refresh(country)
     return country
+
+
+def update_country(session: Session, country_id: int, data: CountryUpdate) -> Country:
+    country = get_country(session, country_id)
+    updates = data.model_dump(exclude_unset=True)
+    for key, value in updates.items():
+        setattr(country, key, value)
+    session.add(country)
+    session.commit()
+    session.refresh(country)
+    return country
+
+
+def delete_country(session: Session, country_id: int) -> dict:
+    country = get_country(session, country_id)
+    session.delete(country)
+    session.commit()
+    return {"status": "deleted", "id": country_id}
