@@ -4,14 +4,13 @@ from sqlmodel import Session
 from app.db import create_db_and_tables, get_session
 from app.models import (
     BookCreate, BookUpdate, AuthorCreate, AuthorUpdate,
-    CountryCreate, CountryUpdate, ItemCreate, ItemUpdate
+    CountryCreate, CountryUpdate
 )
 from app.services import (
     AuthorHasBooksError,
     AuthorNotFoundError,
     BookNotFoundError,
     CountryNotFoundError,
-    ItemNotFoundError,
     create_author,
     create_book,
     delete_author,
@@ -26,10 +25,7 @@ from app.services import (
     list_countries,
     get_country,
     update_country,
-    create_item,
-    list_items,
-    get_item,
-    update_item,
+    delete_country,
 )
 
 app = FastAPI(title="Library REST API")
@@ -161,6 +157,22 @@ def read_country(country_id: int, session: Session = Depends(get_session)):
 @app.post("/countries")
 def create_country_endpoint(data: CountryCreate, session: Session = Depends(get_session)):
     return create_country(session, data)
+
+
+@app.patch("/countries/{country_id}")
+def update_country_endpoint(country_id: int, data: CountryUpdate, session: Session = Depends(get_session)):
+    try:
+        return update_country(session, country_id, data)
+    except CountryNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.delete("/countries/{country_id}")
+def delete_country_endpoint(country_id: int, session: Session = Depends(get_session)):
+    try:
+        return delete_country(session, country_id)
+    except CountryNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 # Analytics Stats endpoints
