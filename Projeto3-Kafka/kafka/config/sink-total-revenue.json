@@ -1,0 +1,20 @@
+{
+    "name": "jdbc-sink-total-revenue",
+    "config": {
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results-total-revenue",
+        "table.name.format": "total_revenue",
+        "auto.create": "false",
+        "auto.evolve": "true",
+        "insert.mode": "insert",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "ExtractValue",
+        "transforms.ExtractValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.ExtractValue.exclude": "key,timestamp"
+    }
+}

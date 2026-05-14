@@ -1,0 +1,24 @@
+{
+    "name": "jdbc-sink-expenses-per-book",
+    "config": {
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results-expenses-per-book",
+        "table.name.format": "expenses_by_book",
+        "auto.create": "false",
+        "auto.evolve": "true",
+        "insert.mode": "upsert",
+        "pk.mode": "record_key",
+        "pk.fields": "book_id",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "ValueToKey,ExtractValue",
+        "transforms.ValueToKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
+        "transforms.ValueToKey.fields": "key",
+        "transforms.ExtractValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.ExtractValue.exclude": "key,timestamp"
+    }
+}

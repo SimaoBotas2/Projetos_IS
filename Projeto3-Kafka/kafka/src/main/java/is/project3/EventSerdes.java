@@ -87,3 +87,24 @@ class StringSerde {
         }
     }
 }
+
+class MetricEventSerde {
+    private static final Gson gson = new Gson();
+
+    public static class MetricEventSerializer implements Serializer<MetricEvent> {
+        @Override
+        public byte[] serialize(String topic, MetricEvent data) {
+            if (data == null) return null;
+            return gson.toJson(data.toJson()).getBytes();
+        }
+    }
+
+    public static class MetricEventDeserializer implements Deserializer<MetricEvent> {
+        @Override
+        public MetricEvent deserialize(String topic, byte[] data) {
+            if (data == null) return null;
+            JsonObject json = gson.fromJson(new String(data), JsonObject.class);
+            return MetricEvent.fromJson(json);
+        }
+    }
+}

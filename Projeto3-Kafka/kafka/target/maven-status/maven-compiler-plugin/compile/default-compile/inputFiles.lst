@@ -1,7 +1,8 @@
-/workspace/src/main/java/is/project3/PurchaseEvent.java
-/workspace/src/main/java/is/project3/ResultEvent.java
-/workspace/src/main/java/is/project3/PurchaseEventProducer.java
-/workspace/src/main/java/is/project3/ProjetoBase3Streams.java
-/workspace/src/main/java/is/project3/SaleEvent.java
-/workspace/src/main/java/is/project3/SaleEventProducer.java
-/workspace/src/main/java/is/project3/EventSerdes.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\PurchaseEventProducer.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\ProjetoBase3Streams.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\SaleEventProducer.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\SaleEvent.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\MetricEvent.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\ResultEvent.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\EventSerdes.java
+C:\Users\simao\Desktop\Uni\Pasta_Universidade\5ºAno(3- Mestrado . Informática)\2º Semestre\Integração de Sistemas\Projetos_IS\Projeto3-Kafka\kafka\src\main\java\is\project3\PurchaseEvent.java

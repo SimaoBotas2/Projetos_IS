@@ -37,6 +37,10 @@ public class ProjetoBase3Streams {
             new ResultEventSerde.ResultEventSerializer(),
             new ResultEventSerde.ResultEventDeserializer()
         );
+        Serde<MetricEvent> metricSerde = Serdes.serdeFrom(
+            new MetricEventSerde.MetricEventSerializer(),
+            new MetricEventSerde.MetricEventDeserializer()
+        );
 
         // Read input streams
         KStream<String, PurchaseEvent> purchases = builder.stream(
@@ -63,11 +67,8 @@ public class ProjetoBase3Streams {
 
         revenuePerBook
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("revenue-per-book", k, v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-revenue-per-book", Produced.with(Serdes.String(), metricSerde));
 
         // Total revenue: aggregate all sales
         KTable<String, Double> totalRevenue = sales
@@ -81,11 +82,8 @@ public class ProjetoBase3Streams {
 
         totalRevenue
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("total-revenue", "total", v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-total-revenue", Produced.with(Serdes.String(), metricSerde));
 
         // ===== EXPENSES COMPUTATIONS =====
 
@@ -101,11 +99,8 @@ public class ProjetoBase3Streams {
 
         expensesPerBook
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("expenses-per-book", k, v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-expenses-per-book", Produced.with(Serdes.String(), metricSerde));
 
         // Total expenses
         KTable<String, Double> totalExpenses = purchases
@@ -119,11 +114,7 @@ public class ProjetoBase3Streams {
 
         totalExpenses
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("total-expenses", "total", v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .to("Results-total-expenses", Produced.with(Serdes.String(), Serdes.Double()));
 
         // ===== PROFIT COMPUTATIONS =====
 
@@ -135,11 +126,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("profit-per-book", k, v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-profit-per-book", Produced.with(Serdes.String(), metricSerde));
 
         // Total profit
         totalRevenue
@@ -149,11 +137,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("total-profit", "total", v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-total-profit", Produced.with(Serdes.String(), metricSerde));
 
         // ===== AVERAGE PURCHASE COMPUTATIONS =====
 
@@ -170,11 +155,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("average-purchase-per-book", k, v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-avg-purchase-per-book", Produced.with(Serdes.String(), metricSerde));
 
         // Average purchase across all books
         KTable<String, Long> purchaseCountAll = purchases
@@ -189,11 +171,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("average-purchase-all-books", "all", v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-avg-purchase-all", Produced.with(Serdes.String(), metricSerde));
 
         // ===== TOP PROFIT BOOK =====
         revenuePerBook
@@ -207,11 +186,8 @@ public class ProjetoBase3Streams {
             .groupByKey(Grouped.with(Serdes.String(), Serdes.Double()))
             .reduce((v1, v2) -> v1 >= v2 ? v1 : v2)
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("top-profit-book", "top_book", v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-top-profit-book", Produced.with(Serdes.String(), metricSerde));
 
         // ===== TIME-WINDOWED COMPUTATIONS (Last Hour) =====
 
@@ -226,16 +202,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent(
-                    "revenue-last-hour",
-                    "window_" + k.window().start() + "_" + k.window().end(),
-                    v,
-                    System.currentTimeMillis()
-                )
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k.key(), new MetricEvent(k.key(), v, System.currentTimeMillis())))
+            .to("Results-revenue-last-hour", Produced.with(Serdes.String(), metricSerde));
 
         // Expenses last hour
         purchases
@@ -248,16 +216,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent(
-                    "expenses-last-hour",
-                    "window_" + k.window().start() + "_" + k.window().end(),
-                    v,
-                    System.currentTimeMillis()
-                )
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k.key(), new MetricEvent(k.key(), v, System.currentTimeMillis())))
+            .to("Results-expenses-last-hour", Produced.with(Serdes.String(), metricSerde));
 
         // Profit last hour (would require joining windowed tables)
 
@@ -274,11 +234,8 @@ public class ProjetoBase3Streams {
                 Materialized.with(Serdes.String(), Serdes.Double())
             )
             .toStream()
-            .map((k, v) -> new KeyValue<>(
-                "",
-                new ResultEvent("top-country-sales-per-book", k, v, System.currentTimeMillis())
-            ))
-            .to("Results", Produced.with(Serdes.String(), resultSerde));
+            .map((k, v) -> new KeyValue<>(k, new MetricEvent(k, v, System.currentTimeMillis())))
+            .to("Results-top-country-sales-per-book", Produced.with(Serdes.String(), metricSerde));
 
         KafkaStreams streams = new KafkaStreams(builder.build(), properties);
         streams.cleanUp();

@@ -7,14 +7,19 @@
         "tasks.max": "1",
         "topics": "Results",
         "auto.create": "true",
-        "insert.mode": "insert",
+        "auto.evolve": "true",
+        "insert.mode": "upsert",
+        "pk.mode": "record_value",
+        "pk.fields": "metric_name",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
         "value.converter.schemas.enable": "false",
-        "transforms": "ValueToKey,ExtractField",
-        "transforms.ValueToKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
-        "transforms.ValueToKey.fields": "metric_name",
-        "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
-        "transforms.ExtractField.field": "metric_name,key,value,timestamp"
+        "transforms": "unwrap",
+        "transforms.unwrap.type": "io.confluent.connect.transforms.UnwrapFromEnvelope",
+        "transforms.unwrap.drop.tombstones": "false",
+        "errors.tolerance": "all",
+        "errors.deadletterqueue.topic.name": "results-errors",
+        "errors.log.enable": "true",
+        "errors.log.include.messages": "true"
     }
 }

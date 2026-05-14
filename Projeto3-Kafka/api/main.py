@@ -26,6 +26,19 @@ from app.services import (
     get_country,
     update_country,
     delete_country,
+    get_revenue_per_book,
+    get_expenses_per_book,
+    get_profit_per_book,
+    get_total_revenue,
+    get_total_expenses,
+    get_total_profit,
+    get_average_purchase_per_book,
+    get_average_purchase_all_books,
+    get_top_profit_book,
+    get_revenue_last_hour,
+    get_expenses_last_hour,
+    get_profit_last_hour,
+    get_top_country_sales_per_book,
 )
 
 app = FastAPI(title="Library REST API")
@@ -176,71 +189,121 @@ def delete_country_endpoint(country_id: int, session: Session = Depends(get_sess
 
 
 # Analytics Stats endpoints
-# These will eventually be populated from Kafka Streams results
-# For now, they return placeholder messages
 @app.get("/analytics/stats/revenue-per-book")
-def get_revenue_per_book():
-    return {"message": "Revenue per book (computed by Kafka Streams)", "data": {}}
+def get_revenue_per_book_endpoint(session: Session = Depends(get_session)):
+    """Get revenue per book from Kafka Streams. Requirement #5."""
+    return {
+        "metric": "revenue-per-book",
+        "data": get_revenue_per_book(session)
+    }
 
 
 @app.get("/analytics/stats/expenses-per-book")
-def get_expenses_per_book():
-    return {"message": "Expenses per book (computed by Kafka Streams)", "data": {}}
+def get_expenses_per_book_endpoint(session: Session = Depends(get_session)):
+    """Get expenses per book from Kafka Streams. Requirement #6."""
+    return {
+        "metric": "expenses-per-book",
+        "data": get_expenses_per_book(session)
+    }
 
 
 @app.get("/analytics/stats/profit-per-book")
-def get_profit_per_book():
-    return {"message": "Profit per book (computed by Kafka Streams)", "data": {}}
+def get_profit_per_book_endpoint(session: Session = Depends(get_session)):
+    """Get profit per book from Kafka Streams. Requirement #7."""
+    return {
+        "metric": "profit-per-book",
+        "data": get_profit_per_book(session)
+    }
 
 
 @app.get("/analytics/stats/total-revenue")
-def get_total_revenue():
-    return {"message": "Total revenue (computed by Kafka Streams)", "value": 0}
+def get_total_revenue_endpoint(session: Session = Depends(get_session)):
+    """Get total revenue from Kafka Streams. Requirement #8."""
+    return {
+        "metric": "total-revenue",
+        "data": get_total_revenue(session)
+    }
 
 
 @app.get("/analytics/stats/total-expenses")
-def get_total_expenses():
-    return {"message": "Total expenses (computed by Kafka Streams)", "value": 0}
+def get_total_expenses_endpoint(session: Session = Depends(get_session)):
+    """Get total expenses from Kafka Streams. Requirement #9."""
+    return {
+        "metric": "total-expenses",
+        "data": get_total_expenses(session)
+    }
 
 
 @app.get("/analytics/stats/total-profit")
-def get_total_profit():
-    return {"message": "Total profit (computed by Kafka Streams)", "value": 0}
+def get_total_profit_endpoint(session: Session = Depends(get_session)):
+    """Get total profit from Kafka Streams. Requirement #10."""
+    return {
+        "metric": "total-profit",
+        "data": get_total_profit(session)
+    }
 
 
 @app.get("/analytics/stats/average-purchase-per-book")
-def get_average_purchase_per_book():
-    return {"message": "Average purchase per book (computed by Kafka Streams)", "data": {}}
+def get_average_purchase_per_book_endpoint(session: Session = Depends(get_session)):
+    """Get average purchase per book from Kafka Streams. Requirement #11."""
+    return {
+        "metric": "average-purchase-per-book",
+        "data": get_average_purchase_per_book(session)
+    }
 
 
 @app.get("/analytics/stats/average-purchase-all-books")
-def get_average_purchase_all_books():
-    return {"message": "Average purchase across all books (computed by Kafka Streams)", "value": 0}
+def get_average_purchase_all_books_endpoint(session: Session = Depends(get_session)):
+    """Get average purchase across all books from Kafka Streams. Requirement #12."""
+    return {
+        "metric": "average-purchase-all-books",
+        "data": get_average_purchase_all_books(session)
+    }
 
 
 @app.get("/analytics/stats/top-profit-book")
-def get_top_profit_book():
-    return {"message": "Top profit book (computed by Kafka Streams)", "data": {}}
+def get_top_profit_book_endpoint(session: Session = Depends(get_session)):
+    """Get top profit book from Kafka Streams. Requirement #13."""
+    return {
+        "metric": "top-profit-book",
+        "data": get_top_profit_book(session)
+    }
 
 
 @app.get("/analytics/stats/revenue-last-hour")
-def get_revenue_last_hour():
-    return {"message": "Revenue in last hour (time-windowed, computed by Kafka Streams)", "value": 0}
+def get_revenue_last_hour_endpoint(session: Session = Depends(get_session)):
+    """Get revenue in last hour from Kafka Streams. Requirement #14."""
+    return {
+        "metric": "revenue-last-hour",
+        "data": get_revenue_last_hour(session)
+    }
 
 
 @app.get("/analytics/stats/expenses-last-hour")
-def get_expenses_last_hour():
-    return {"message": "Expenses in last hour (time-windowed, computed by Kafka Streams)", "value": 0}
+def get_expenses_last_hour_endpoint(session: Session = Depends(get_session)):
+    """Get expenses in last hour from Kafka Streams. Requirement #15."""
+    return {
+        "metric": "expenses-last-hour",
+        "data": get_expenses_last_hour(session)
+    }
 
 
 @app.get("/analytics/stats/profit-last-hour")
-def get_profit_last_hour():
-    return {"message": "Profit in last hour (time-windowed, computed by Kafka Streams)", "value": 0}
+def get_profit_last_hour_endpoint(session: Session = Depends(get_session)):
+    """Get profit in last hour from Kafka Streams. Requirement #16."""
+    return {
+        "metric": "profit-last-hour",
+        "data": get_profit_last_hour(session)
+    }
 
 
 @app.get("/analytics/stats/top-country-sales-per-book")
-def get_top_country_sales_per_book():
-    return {"message": "Country with highest sales per book (computed by Kafka Streams)", "data": {}}
+def get_top_country_sales_per_book_endpoint(session: Session = Depends(get_session)):
+    """Get country with highest sales per book from Kafka Streams. Requirement #17."""
+    return {
+        "metric": "top-country-sales-per-book",
+        "data": get_top_country_sales_per_book(session)
+    }
 
 
 @app.get("/analytics/stats/dashboard")

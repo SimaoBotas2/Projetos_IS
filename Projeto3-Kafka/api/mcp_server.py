@@ -26,7 +26,21 @@ from app.services import (
     list_countries,
     update_country,
     delete_country,
+    get_revenue_per_book,
+    get_expenses_per_book,
+    get_profit_per_book,
+    get_total_revenue,
+    get_total_expenses,
+    get_total_profit,
+    get_average_purchase_per_book,
+    get_average_purchase_all_books,
+    get_top_profit_book,
+    get_revenue_last_hour,
+    get_expenses_last_hour,
+    get_profit_last_hour,
+    get_top_country_sales_per_book,
 )
+from app.kafka_producer import get_producer
 
 mcp = FastMCP(name="LibraryMCPServer")
 create_db_and_tables()
@@ -305,6 +319,233 @@ def countries_summary() -> str:
             f"{country.id}: {country.name} ({country.region})"
             for country in countries
         )
+
+
+# ===== ANALYTICS TOOLS (Requirements #5-17) =====
+
+@mcp.tool()
+def get_revenue_per_book_tool() -> list[dict]:
+    """Get revenue per book computed by Kafka Streams. Requirement #5: Revenue per item."""
+    with Session(engine) as session:
+        try:
+            return get_revenue_per_book(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_revenue_per_book_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_expenses_per_book_tool() -> list[dict]:
+    """Get expenses per book computed by Kafka Streams. Requirement #6: Expenses per item."""
+    with Session(engine) as session:
+        try:
+            return get_expenses_per_book(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_expenses_per_book_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_profit_per_book_tool() -> list[dict]:
+    """Get profit per book computed by Kafka Streams. Requirement #7: Profit per item."""
+    with Session(engine) as session:
+        try:
+            return get_profit_per_book(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_profit_per_book_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_total_revenue_tool() -> dict:
+    """Get total revenue computed by Kafka Streams. Requirement #8: Total revenue."""
+    with Session(engine) as session:
+        try:
+            return get_total_revenue(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_total_revenue_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_total_expenses_tool() -> dict:
+    """Get total expenses computed by Kafka Streams. Requirement #9: Total expenses."""
+    with Session(engine) as session:
+        try:
+            return get_total_expenses(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_total_expenses_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_total_profit_tool() -> dict:
+    """Get total profit computed by Kafka Streams. Requirement #10: Total profit."""
+    with Session(engine) as session:
+        try:
+            return get_total_profit(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_total_profit_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_average_purchase_per_book_tool() -> list[dict]:
+    """Get average purchase per book computed by Kafka Streams. Requirement #11: Avg purchase per item."""
+    with Session(engine) as session:
+        try:
+            return get_average_purchase_per_book(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_average_purchase_per_book_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_average_purchase_all_books_tool() -> dict:
+    """Get average purchase across all books computed by Kafka Streams. Requirement #12: Avg purchase all items."""
+    with Session(engine) as session:
+        try:
+            return get_average_purchase_all_books(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_average_purchase_all_books_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_top_profit_book_tool() -> dict:
+    """Get top profit book computed by Kafka Streams. Requirement #13: Top profit item."""
+    with Session(engine) as session:
+        try:
+            return get_top_profit_book(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_top_profit_book_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_revenue_last_hour_tool() -> dict:
+    """Get revenue in last hour computed by Kafka Streams. Requirement #14: Revenue last hour."""
+    with Session(engine) as session:
+        try:
+            return get_revenue_last_hour(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_revenue_last_hour_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_expenses_last_hour_tool() -> dict:
+    """Get expenses in last hour computed by Kafka Streams. Requirement #15: Expenses last hour."""
+    with Session(engine) as session:
+        try:
+            return get_expenses_last_hour(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_expenses_last_hour_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_profit_last_hour_tool() -> dict:
+    """Get profit in last hour computed by Kafka Streams. Requirement #16: Profit last hour."""
+    with Session(engine) as session:
+        try:
+            return get_profit_last_hour(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_profit_last_hour_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
+def get_top_country_sales_per_book_tool() -> list[dict]:
+    """Get country with highest sales per book computed by Kafka Streams. Requirement #17: Top sales by country per item."""
+    with Session(engine) as session:
+        try:
+            return get_top_country_sales_per_book(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_top_country_sales_per_book_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+# ===== KAFKA PRODUCER TOOLS =====
+
+@mcp.tool()
+def create_purchase_event(book_id: int, supplier_id: int, cost: float, quantity: int) -> dict:
+    """Create a purchase order event and send to Kafka. Simulates a supplier delivering books."""
+    try:
+        producer = get_producer()
+        return producer.send_purchase_event(book_id, supplier_id, cost, quantity)
+    except Exception as exc:
+        print(f"MCP ERROR in create_purchase_event: {exc}")
+        traceback.print_exc()
+        return {"status": "error", "message": str(exc)}
+
+
+@mcp.tool()
+def create_sale_event(book_id: int, country_id: int, price: float, quantity: int) -> dict:
+    """Create a sale event and send to Kafka. Simulates customers buying books."""
+    try:
+        producer = get_producer()
+        return producer.send_sale_event(book_id, country_id, price, quantity)
+    except Exception as exc:
+        print(f"MCP ERROR in create_sale_event: {exc}")
+        traceback.print_exc()
+        return {"status": "error", "message": str(exc)}
+
+
+@mcp.tool()
+def create_test_transactions(num_purchases: int = 5, num_sales: int = 5) -> dict:
+    """Create random test transactions (purchases and sales) to populate Kafka topics."""
+    import random
+
+    producer = get_producer()
+
+    # Generate random test data
+    book_ids = [1, 2, 3, 4, 5]
+    country_ids = [1, 2, 3]
+    supplier_ids = [10, 11, 12]
+
+    purchases = [
+        {
+            "book_id": random.choice(book_ids),
+            "supplier_id": random.choice(supplier_ids),
+            "cost": round(random.uniform(3.0, 10.0), 2),
+            "quantity": random.randint(1, 20)
+        }
+        for _ in range(num_purchases)
+    ]
+
+    sales = [
+        {
+            "book_id": random.choice(book_ids),
+            "country_id": random.choice(country_ids),
+            "price": round(random.uniform(12.0, 25.0), 2),
+            "quantity": random.randint(1, 10)
+        }
+        for _ in range(num_sales)
+    ]
+
+    purchase_results = producer.send_purchase_events_batch(purchases)
+    sale_results = producer.send_sale_events_batch(sales)
+
+    return {
+        "status": "success",
+        "message": f"Created {num_purchases} purchases and {num_sales} sales",
+        "purchases": purchase_results,
+        "sales": sale_results
+    }
 
 
 if __name__ == "__main__":
