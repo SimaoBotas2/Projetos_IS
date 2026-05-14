@@ -1,7 +1,7 @@
 from sqlmodel import Session, SQLModel, create_engine
 
 # PostgreSQL connection to Kafka project database
-DATABASE_URL = "postgresql://postgres:nopass@localhost:5432/project3"
+DATABASE_URL = "postgresql+psycopg://postgres:nopass@localhost:5432/project3"
 engine = create_engine(DATABASE_URL, echo=False)
 
 

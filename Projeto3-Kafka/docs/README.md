@@ -1,155 +1,139 @@
 # Projeto 3: Kafka Real-Time Event Processing
 
-## Visão Geral
+Sistema de processamento em tempo real de eventos de compras/vendas com Apache Kafka, exposto via REST API e agente IA (LangChain + MCP).
 
-Sistema de processamento em tempo real de eventos de vendas e compras usando Apache Kafka. Processa eventos com Kafka Streams, persiste em PostgreSQL via Kafka Connect, e expõe resultados através de REST API com integração a IA (LangChain + MCP).
-
-**Objetivo**: Demonstrar integração end-to-end de componentes de sistemas distribuídos (brokers, streaming, persistence, APIs).
-
-## Arquitetura
-
-```
-Producers                Kafka Topics            Streams Processing        Persistence
-┌──────────────────┐     ┌──────────────────┐   ┌──────────────────┐     ┌─────────────┐
-│ Purchase Events  │────▶│ Purchases Topic  │──▶│                  │────▶│             │
-│ Sale Events      │     │ Sales Topic      │   │ Kafka Streams    │     │ PostgreSQL  │
-└──────────────────┘     └──────────────────┘   │ (11+ metrics)    │     │ (Results)   │
-                                                 └──────────────────┘     └─────────────┘
-                                                           │
-                         ┌─────────────────────────────────┘
-                         ▼
-                 ┌──────────────────┐
-                 │ Results Topic    │◀─┐
-                 └──────────────────┘  │
-                         │              │
-                    Kafka Connect───────┘
-                         │
-                    REST API (FastAPI)
-                         │
-            ┌────────────┴────────────┐
-            ▼                         ▼
-        Web Dashboard         LangChain Agent (IA)
-```
-
-## Tech Stack
-
-**Backend**
-- Java 16, Maven 3.8.1
-- Apache Kafka 2.8.1 (broker)
-- Kafka Streams 2.8.1 (processing)
-- Kafka Connect (persistence layer)
-- PostgreSQL 13
-- GSON (serialization)
-
-**Frontend/API**
-- Python 3.8+, FastAPI 0.135.1
-- SQLModel (ORM)
-- LangChain 1.2.12 + Google GenAI
-- MCP 1.26.0 (Model Context Protocol)
-- Uvicorn (ASGI server)
-
-**Infraestrutura**
-- Docker & Docker Compose
-- Dev Containers (VS Code)
-
-## Componentes Principais
-
-| Componente | Descrição | Tecnologia |
-|---|---|---|
-| **Producers** | Geram eventos de compra/venda com dados realistas | Java + Javafaker |
-| **Streams** | Processa 11+ métricas: receita, despesas, lucro, top books/países | Kafka Streams |
-| **Connectors** | Sincroniza config DB → Kafka e resultados Kafka → PostgreSQL | Kafka Connect JDBC |
-| **REST API** | Consulta resultados de análises | FastAPI |
-| **Web App** | Dashboard interativo com agente IA | HTML/CSS + LangChain |
-
-## Como Executar
-
-### Início Rápido
-
-```bash
-# 1. Iniciar containers (Docker Compose)
-cd TP3-base/.devcontainer
-docker compose -f docker-compose-standalone.yml up -d
-
-# 2. Entrar no container de linha de comando
-docker compose -f docker-compose-standalone.yml exec command-line bash
-
-# 3. Setup (dentro do container)
-cd /workspace/config && ./post_connectors.sh
-mvn clean package
-
-# 4. Executar producers e streams (em terminais separados)
-java -cp target/project3-0.0.1-SNAPSHOT.jar PurchaseEventProducer
-java -cp target/project3-0.0.1-SNAPSHOT.jar SaleEventProducer
-java -cp target/project3-0.0.1-SNAPSHOT.jar ProjetoBase3Streams
-
-# 5. Acessar API
-# REST API: http://localhost:8001
-# Web App: http://localhost:8001/webapp
-```
-
-**Veja [SETUP.md](TP3-base/SETUP.md) para instruções detalhadas.**
-
-## Database Schema
-
-**Tabelas de Configuração** (sincronizadas via Kafka Connect Source)
-- `suppliers` (5 fornecedores)
-- `countries` (5 países: Portugal, Spain, France, Germany, Brazil)
-- `books` (5 livros clássicos com preços)
-
-**Tabelas de Resultados** (preenchidas via Kafka Connect Sink)
-- `analytics_results` (métrica genérica com timestamp)
-- `revenue_by_book`, `expenses_by_book`, `profit_by_book` (agregados específicos)
-- `average_purchase_by_book` (custos médios)
-- `time_window_metrics` (análises por janelas de 1h)
-- `best_performing_by_country` (top performing livro por país)
-
-## Verificação
-
-```bash
-# Listar tópicos Kafka
-kafka-topics.sh --bootstrap-server broker1:9092 --list
-
-# Consumir eventos (ex: Purchases)
-kafka-console-consumer.sh --bootstrap-server broker1:9092 --topic Purchases
-
-# Verificar dados no PostgreSQL (dentro do container database)
-psql -U postgres -d project3 -c "SELECT COUNT(*) FROM analytics_results;"
-```
-
-## Parar
-
-```bash
-cd TP3-base/.devcontainer
-docker compose -f docker-compose-standalone.yml down
-```
-
-## Estrutura do Projeto
+## Estrutura
 
 ```
 Projeto3-Kafka/
-├── TP3-base/                    # Backend Java + Kafka
-│   ├── src/main/java/is/project3/
-│   │   ├── ProjetoBase3Streams.java    # Aplicação Streams
-│   │   ├── PurchaseEventProducer.java  # Producer de compras
-│   │   ├── SaleEventProducer.java      # Producer de vendas
-│   │   └── models/                     # Event models (GSON)
-│   ├── sql/create_tables.sql           # Schema PostgreSQL
-│   ├── config/post_connectors.sh       # Setup Kafka Connect
-│   ├── .devcontainer/docker-compose-standalone.yml
-│   ├── pom.xml
-│   └── SETUP.md
-├── ProjetoBase_MCP_Agent_Web/  # Frontend Python + IA
-│   ├── app/
-│   │   ├── main.py             # REST API (FastAPI)
-│   │   ├── mcp_server.py       # MCP SSE server
-│   │   ├── langchain_agent.py  # Agent IA
-│   │   └── models.py, services.py
-│   ├── webapp.html             # Dashboard
-│   └── requirements.txt
-└── README.md (este arquivo)
+├── kafka/      → Java: Kafka Streams, producers, Kafka Connect, Docker
+├── api/        → Python: FastAPI REST API, MCP Server, LangChain Agent
+├── docs/       → Documentação
+└── scripts/    → start_all.bat (Windows)
 ```
 
 ---
 
-**Contato/Issues**: Veja SETUP.md para troubleshooting detalhado.
+## Como Correr
+
+O projeto tem **duas partes independentes** — o lado Kafka (Java/Docker) e o lado API (Python).
+
+---
+
+### Parte 1 — Kafka (dentro do Docker)
+
+```bash
+# 1. Arrancar os containers
+cd kafka
+docker compose -f .devcontainer/docker-compose-standalone.yml up -d
+
+# 2. Entrar no container de linha de comandos
+docker compose -f .devcontainer/docker-compose-standalone.yml exec command-line bash
+
+# --- Os comandos abaixo correm DENTRO do container ---
+
+# 3. Registar os Kafka Connect connectors (Source + Sink)
+cd /workspace/config
+./post_connectors.sh
+
+# 4. Compilar o projeto Maven (gera fat JAR com todas as dependências)
+cd /workspace
+mvn clean package
+
+# 5. Correr os 3 componentes (cada um num terminal separado, ou usar run_streams.sh)
+java -cp target/project3-jar-with-dependencies.jar is.project3.PurchaseEventProducer
+java -cp target/project3-jar-with-dependencies.jar is.project3.SaleEventProducer
+java -cp target/project3-jar-with-dependencies.jar is.project3.ProjetoBase3Streams
+
+# Alternativa: correr tudo em background com script
+./run_streams.sh
+```
+
+Verificar que está a funcionar:
+```bash
+# Ver tópicos Kafka
+kafka-topics.sh --bootstrap-server broker1:9092 --list
+
+# Ver resultados a chegar ao tópico Results
+kafka-console-consumer.sh --bootstrap-server broker1:9092 --topic Results --from-beginning
+
+# Ver dados no PostgreSQL
+psql -U postgres -d project3 -c "SELECT * FROM analytics_results LIMIT 10;"
+```
+
+---
+
+### Parte 2 — API Python (no host, fora do Docker)
+
+```bash
+# 1. Criar e ativar virtual environment (só na primeira vez)
+cd api
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Linux/Mac
+
+# 2. Instalar dependências
+pip install -r requirements.txt
+
+# 3. Correr os 3 serviços (cada um num terminal separado)
+python main.py          # REST API     → http://127.0.0.1:8001
+python mcp_server.py    # MCP Server   → http://127.0.0.1:8002/sse
+python langchain_agent.py  # Agent API → http://127.0.0.1:8000
+```
+
+Abrir `api/webapp.html` no browser para aceder ao chat interface.
+
+---
+
+### Windows — Início Rápido
+
+```bat
+scripts\start_all.bat
+```
+
+Abre os 3 serviços Python em janelas separadas e lança a webapp no browser.  
+> Requer `.venv` criado em `api/` previamente.
+
+---
+
+## Serviços e Portas
+
+| Serviço | Porta | Descrição |
+|---|---|---|
+| REST API | `8001` | FastAPI — endpoints CRUD e analytics |
+| MCP Server | `8002` | MCP SSE server — tools para o agente IA |
+| Agent API | `8000` | LangChain Agent — recebe perguntas em linguagem natural |
+| PostgreSQL | `5432` | Base de dados (dentro do Docker) |
+| Kafka Broker | `9092` | Broker interno (dentro do Docker) |
+| Kafka Connect | `8083` | Connectors REST API (dentro do Docker) |
+
+---
+
+## Métricas Calculadas pelo Kafka Streams
+
+| Métrica | Tópico/Tabela | Requisito |
+|---|---|---|
+| Revenue por livro | `revenue_by_book` | #5 |
+| Expenses por livro | `expenses_by_book` | #6 |
+| Profit por livro | `profit_by_book` | #7 |
+| Total revenue | `total_revenue` | #8 |
+| Total expenses | `total_expenses` | #9 |
+| Total profit | `total_profit` | #10 |
+| Compra média por livro | `avg_purchase_by_book` | #11 |
+| Compra média global | `avg_purchase_all` | #12 |
+| Livro com maior lucro | `top_profit_book` | #13 |
+| Revenue última hora | `revenue_last_hour` | #14 |
+| Expenses última hora | `expenses_last_hour` | #15 |
+
+---
+
+## Parar Tudo
+
+```bash
+# Parar containers Docker
+cd kafka
+docker compose -f .devcontainer/docker-compose-standalone.yml down
+
+# Limpar volumes também (reset completo)
+docker compose -f .devcontainer/docker-compose-standalone.yml down -v
+```
