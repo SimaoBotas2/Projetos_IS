@@ -1,0 +1,27 @@
+{
+    "name": "jdbc-sink-revenue-last-hour",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results-revenue-last-hour",
+        "table.name.format": "time_window_metrics",
+        "auto.create": "false",
+        "auto.evolve": "false",
+        "insert.mode": "upsert",
+        "pk.mode": "record_value",
+        "pk.fields": "metric_type",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "AddMetricType,RenameValue,DropMetaFields",
+        "transforms.AddMetricType.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+        "transforms.AddMetricType.static.field": "metric_type",
+        "transforms.AddMetricType.static.value": "revenue_last_hour",
+        "transforms.RenameValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.RenameValue.renames": "value:metric_value",
+        "transforms.DropMetaFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.DropMetaFields.exclude": "key,timestamp"
+    }
+}

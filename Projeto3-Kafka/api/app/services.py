@@ -240,11 +240,11 @@ def get_profit_per_book(session: Session) -> list[dict]:
 
 
 def get_total_revenue(session: Session) -> dict:
-    """Query total_revenue computed by Kafka Streams. Requirement #8."""
+    """Query total_revenue from total_metrics table computed by Kafka Streams. Requirement #8."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT total_revenue FROM total_revenue LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM total_metrics WHERE metric_name = 'total_revenue'")).first()
         if result:
             return {"total_revenue": float(result[0])}
         return {"total_revenue": 0.0}
@@ -253,11 +253,11 @@ def get_total_revenue(session: Session) -> dict:
 
 
 def get_total_expenses(session: Session) -> dict:
-    """Query total_expenses computed by Kafka Streams. Requirement #9."""
+    """Query total_expenses from total_metrics table computed by Kafka Streams. Requirement #9."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT total_expenses FROM total_expenses LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM total_metrics WHERE metric_name = 'total_expenses'")).first()
         if result:
             return {"total_expenses": float(result[0])}
         return {"total_expenses": 0.0}
@@ -266,11 +266,11 @@ def get_total_expenses(session: Session) -> dict:
 
 
 def get_total_profit(session: Session) -> dict:
-    """Query total_profit computed by Kafka Streams. Requirement #10."""
+    """Query total_profit from total_metrics table computed by Kafka Streams. Requirement #10."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT total_profit FROM total_profit LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM total_metrics WHERE metric_name = 'total_profit'")).first()
         if result:
             return {"total_profit": float(result[0])}
         return {"total_profit": 0.0}
@@ -279,22 +279,22 @@ def get_total_profit(session: Session) -> dict:
 
 
 def get_average_purchase_per_book(session: Session) -> list[dict]:
-    """Query avg_purchase_by_book table computed by Kafka Streams. Requirement #11."""
+    """Query average_purchase_by_book table computed by Kafka Streams. Requirement #11."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT * FROM avg_purchase_by_book ORDER BY avg_purchase DESC")).all()
+        result = session.exec(text("SELECT book_id, average_amount FROM average_purchase_by_book ORDER BY average_amount DESC")).all()
         return [{"book_id": int(r[0]), "avg_purchase": float(r[1])} for r in result]
     except Exception as e:
-        return [{"error": f"Cannot query avg_purchase_by_book: {str(e)}"}]
+        return [{"error": f"Cannot query average_purchase_by_book: {str(e)}"}]
 
 
 def get_average_purchase_all_books(session: Session) -> dict:
-    """Query average_purchase computed by Kafka Streams. Requirement #12."""
+    """Query average_purchase from total_metrics table computed by Kafka Streams. Requirement #12."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT average_purchase FROM average_purchase LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM total_metrics WHERE metric_name = 'average_purchase'")).first()
         if result:
             return {"average_purchase": float(result[0])}
         return {"average_purchase": 0.0}
@@ -303,24 +303,24 @@ def get_average_purchase_all_books(session: Session) -> dict:
 
 
 def get_top_profit_book(session: Session) -> dict:
-    """Query top_profit_book computed by Kafka Streams. Requirement #13."""
+    """Query top_profit_book from total_metrics table computed by Kafka Streams. Requirement #13."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT * FROM top_profit_book LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM total_metrics WHERE metric_name = 'top_profit_book'")).first()
         if result:
-            return {"book_id": int(result[0]), "profit": float(result[1])}
+            return {"profit": float(result[0])}
         return {"error": "No data available"}
     except Exception as e:
         return {"error": f"Cannot query top_profit_book: {str(e)}"}
 
 
 def get_revenue_last_hour(session: Session) -> dict:
-    """Query revenue_last_hour computed by Kafka Streams. Requirement #14."""
+    """Query revenue_last_hour from time_window_metrics table. Requirement #14."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT revenue_last_hour FROM revenue_last_hour LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM time_window_metrics WHERE metric_type = 'revenue_last_hour'")).first()
         if result:
             return {"revenue_last_hour": float(result[0])}
         return {"revenue_last_hour": 0.0}
@@ -329,11 +329,11 @@ def get_revenue_last_hour(session: Session) -> dict:
 
 
 def get_expenses_last_hour(session: Session) -> dict:
-    """Query expenses_last_hour computed by Kafka Streams. Requirement #15."""
+    """Query expenses_last_hour from time_window_metrics table. Requirement #15."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT expenses_last_hour FROM expenses_last_hour LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM time_window_metrics WHERE metric_type = 'expenses_last_hour'")).first()
         if result:
             return {"expenses_last_hour": float(result[0])}
         return {"expenses_last_hour": 0.0}
@@ -342,11 +342,11 @@ def get_expenses_last_hour(session: Session) -> dict:
 
 
 def get_profit_last_hour(session: Session) -> dict:
-    """Query profit_last_hour computed by Kafka Streams. Requirement #16."""
+    """Query profit_last_hour from time_window_metrics table. Requirement #16."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT profit_last_hour FROM profit_last_hour LIMIT 1")).first()
+        result = session.exec(text("SELECT metric_value FROM time_window_metrics WHERE metric_type = 'profit_last_hour'")).first()
         if result:
             return {"profit_last_hour": float(result[0])}
         return {"profit_last_hour": 0.0}
@@ -355,11 +355,11 @@ def get_profit_last_hour(session: Session) -> dict:
 
 
 def get_top_country_sales_per_book(session: Session) -> list[dict]:
-    """Query top_sales_by_country_per_book computed by Kafka Streams. Requirement #17."""
+    """Query best_performing_by_country table computed by Kafka Streams. Requirement #17."""
     from sqlalchemy import text
 
     try:
-        result = session.exec(text("SELECT * FROM top_sales_by_country_per_book ORDER BY sales DESC")).all()
-        return [{"book_id": int(r[0]), "country": str(r[1]), "sales": float(r[2])} for r in result]
+        result = session.exec(text("SELECT book_id, country_id, sales_volume, revenue FROM best_performing_by_country ORDER BY revenue DESC")).all()
+        return [{"book_id": int(r[0]), "country_id": int(r[1]), "sales_volume": float(r[2]) if r[2] else 0.0, "revenue": float(r[3]) if r[3] else 0.0} for r in result]
     except Exception as e:
-        return [{"error": f"Cannot query top_sales_by_country_per_book: {str(e)}"}]
+        return [{"error": f"Cannot query best_performing_by_country: {str(e)}"}]

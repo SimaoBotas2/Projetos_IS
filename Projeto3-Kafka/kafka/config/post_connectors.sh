@@ -1,16 +1,34 @@
 #!/bin/bash
 
-# Register JDBC source connector (DBInfo from database)
-echo "Registering source-dbinfo connector..."
-curl -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://connect:8083/connectors -d @source-dbinfo.json
+BASE_URL="http://connect:8083/connectors"
 
-# Register JDBC sink connectors for each analytics metric
-echo "Registering analytics sink connectors..."
+post() {
+    echo "Registering $1..."
+    curl -s -X POST -H "Accept:application/json" -H "Content-Type:application/json" $BASE_URL -d @$1
+    echo ""
+}
 
-curl -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://connect:8083/connectors -d @sink-revenue-per-book.json
-curl -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://connect:8083/connectors -d @sink-expenses-per-book.json
-curl -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://connect:8083/connectors -d @sink-profit-per-book.json
-curl -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://connect:8083/connectors -d @sink-total-revenue.json
+# Source connector (DB → Kafka)
+post source-dbinfo.json
 
-echo "Connector registration complete!"
+# Sink connectors — per book (Kafka → PostgreSQL)
+post sink-revenue-per-book.json
+post sink-expenses-per-book.json
+post sink-profit-per-book.json
+post sink-avg-purchase-per-book.json
+post sink-top-country-sales-per-book.json
+
+# Sink connectors — totals/scalars → total_metrics table
+post sink-total-revenue.json
+post sink-total-expenses.json
+post sink-total-profit.json
+post sink-avg-purchase-all.json
+post sink-top-profit-book.json
+
+# Sink connectors — windowed → time_window_metrics table
+post sink-revenue-last-hour.json
+post sink-expenses-last-hour.json
+
+echo ""
+echo "All 13 connectors registered!"
 echo "Check status: curl http://connect:8083/connectors"

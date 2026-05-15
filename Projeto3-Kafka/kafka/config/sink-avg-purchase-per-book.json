@@ -1,0 +1,26 @@
+{
+    "name": "jdbc-sink-avg-purchase-per-book",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results-avg-purchase-per-book",
+        "table.name.format": "average_purchase_by_book",
+        "auto.create": "false",
+        "auto.evolve": "false",
+        "insert.mode": "upsert",
+        "pk.mode": "record_value",
+        "pk.fields": "book_id",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "ExtractKeyToValue,RenameValue,DropMetaFields",
+        "transforms.ExtractKeyToValue.type": "org.apache.kafka.connect.transforms.HoistField$Key",
+        "transforms.ExtractKeyToValue.field": "book_id",
+        "transforms.RenameValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.RenameValue.renames": "value:average_amount",
+        "transforms.DropMetaFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.DropMetaFields.exclude": "key,timestamp"
+    }
+}

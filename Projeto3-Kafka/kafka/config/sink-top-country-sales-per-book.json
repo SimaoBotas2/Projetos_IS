@@ -1,0 +1,26 @@
+{
+    "name": "jdbc-sink-top-country-sales-per-book",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results-top-country-sales-per-book",
+        "table.name.format": "best_performing_by_country",
+        "auto.create": "false",
+        "auto.evolve": "false",
+        "insert.mode": "upsert",
+        "pk.mode": "kafka",
+        "pk.fields": "book_country_key",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "transforms": "ExtractKeyToValue,RenameValue,DropMetaFields",
+        "transforms.ExtractKeyToValue.type": "org.apache.kafka.connect.transforms.HoistField$Key",
+        "transforms.ExtractKeyToValue.field": "book_country_key",
+        "transforms.RenameValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.RenameValue.renames": "value:revenue",
+        "transforms.DropMetaFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.DropMetaFields.exclude": "key,timestamp"
+    }
+}

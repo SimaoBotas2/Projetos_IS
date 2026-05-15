@@ -1,164 +1,165 @@
-# Roadmap: MCP + LangChain Agent para Assignment Requirements
+# Roadmap: Projeto 3 — Estado Atual e Bugs
 
-## Objetivo
-Integrar MCP Server + LangChain Agent para implementar os 17 requisitos da assignment via chat interface.
+## Estado Geral
 
-**Estrutura atual**:
+| Componente | Estado |
+|---|---|
+| Kafka Streams topology (13 métricas) | ✅ Implementado — ⚠️ Não produz output (ver bugs) |
+| REST API (CRUD + Analytics) | ✅ Implementado — ⚠️ Analytics com nomes de tabelas errados |
+| MCP Server (todas as tools) | ✅ Implementado |
+| LangChain Agent | ✅ Funcional |
+| Kafka Connect Sink connectors | ⚠️ Apenas 4 de 13 configurados |
+| Base de dados persistente | ✅ Volume Docker configurado |
+| MCP Kafka Producer tools | ✅ Implementado |
+
+---
+
+## 🐛 Bugs Conhecidos (por ordem de prioridade)
+
+### BUG 1 — CRÍTICO: Schema da BD incompatível com services.py
+
+`services.py` consulta tabelas com nomes diferentes dos que existem na BD:
+
+| services.py consulta | Tabela real na BD | Fix necessário |
+|---|---|---|
+| `total_revenue` | `total_metrics` (coluna `metric_value`) | Corrigir query em services.py |
+| `total_expenses` | `total_metrics` | Corrigir query |
+| `total_profit` | `total_metrics` | Corrigir query |
+| `average_purchase` | não existe | Corrigir para `total_metrics` |
+| `avg_purchase_by_book` | `average_purchase_by_book` | Corrigir nome da tabela |
+| `top_profit_book` | não existe | Corrigir para `total_metrics` |
+| `revenue_last_hour` | `time_window_metrics` | Corrigir query |
+| `expenses_last_hour` | `time_window_metrics` | Corrigir query |
+| `profit_last_hour` | `time_window_metrics` | Corrigir query |
+| `top_sales_by_country_per_book` | `best_performing_by_country` | Corrigir nome |
+
+### BUG 2 — CRÍTICO: Tabela `books` na BD não tem colunas `author` e `author_id`
+
+O ficheiro `kafka/sql/create_tables.sql` é executado pelo Docker ao arrancar e cria a tabela `books` **sem** as colunas `author` e `author_id`. O SQLModel não recria tabelas que já existem.
+
+**Resultado**: `POST /books` falha com erro de coluna inexistente.
+
+**Fix**: Atualizar `kafka/sql/create_tables.sql` para incluir tabela `author` e colunas FK na tabela `books`.
+
+### BUG 3 — CRÍTICO: Kafka Streams não produz output para tópicos Results-*
+
+O Kafka Streams consome corretamente do tópico `Sales` (LAG=0 verificado) mas não escreve nos tópicos `Results-*`. Causa provável:
+
+- Erro de serialização no `MetricEventSerde`
+- Exceção silenciosa na topology (verificar logs do `java -jar`)
+- `streams.cleanUp()` chamado no startup pode causar problemas de estado
+
+**Fix**: Examinar logs da aplicação Java ao arrancar. Procurar por `ERROR` ou `Exception`.
+
+### BUG 4 — ALTO: Kafka Connect Sink connectors em falta
+
+Existem apenas **4 conectores** configurados para **13 tópicos** de resultado:
+
+| Conector | Estado |
+|---|---|
+| `sink-revenue-per-book` | ✅ Existe |
+| `sink-expenses-per-book` | ✅ Existe |
+| `sink-profit-per-book` | ✅ Existe |
+| `sink-total-revenue` | ✅ Existe |
+| `sink-total-expenses` | ❌ Falta |
+| `sink-total-profit` | ❌ Falta |
+| `sink-avg-purchase-per-book` | ❌ Falta |
+| `sink-avg-purchase-all` | ❌ Falta |
+| `sink-top-profit-book` | ❌ Falta |
+| `sink-revenue-last-hour` | ❌ Falta |
+| `sink-expenses-last-hour` | ❌ Falta |
+| `sink-profit-last-hour` | ❌ Falta |
+| `sink-top-country-sales` | ❌ Falta |
+
+### BUG 5 — MÉDIO: Kafka Streams usa `broker2` que não existe
+
+`ProjetoBase3Streams.java` linha 19:
+```java
+properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "broker1:9092,broker2:9092");
 ```
-Projeto3-Kafka/
-├── kafka/    ← Java Kafka Streams (producers, streams, connectors)
-├── api/      ← FastAPI + MCP Server + LangChain Agent
-├── docs/
-└── scripts/
+Apenas `broker1` existe no docker-compose. Deve ser apenas `"broker1:9092"`.
+
+### BUG 6 — MÉDIO: `Results-total-expenses` usa Serde errado
+
+`ProjetoBase3Streams.java` linha 117 usa `Serdes.Double()` em vez de `metricSerde`:
+```java
+.to("Results-total-expenses", Produced.with(Serdes.String(), Serdes.Double()));
 ```
+Inconsistente com todos os outros tópicos que usam `MetricEvent`.
+
+### BUG 7 — BAIXO: Req #16 (Profit última hora) não implementado
+
+O código Kafka Streams tem um comentário `// would require joining windowed tables` mas não implementa o cálculo. O tópico `Results-profit-last-hour` nunca recebe dados.
 
 ---
 
-## 1. MODELS (api/app/models.py)
+## Estado por Requisito do Assignment
 
-**Status**: ✅ Completo
-
-- ✅ Author, AuthorCreate, AuthorUpdate
-- ✅ Book, BookCreate, BookUpdate (com `cost_price`, `sale_price`) — usado como "Item" da shop
-- ✅ Country, CountryCreate, CountryUpdate
-- ✅ PurchaseEvent, SaleEvent, ResultEvent (Kafka events)
-
----
-
-## 2. SERVICES (api/app/services.py)
-
-**Status**: ✅ Completo (exceto Analytics)
-
-### Country CRUD
-- ✅ `list_countries()`
-- ✅ `get_country()`
-- ✅ `create_country()`
-- ✅ `update_country()`
-- ✅ `delete_country()`
-
-### Book CRUD (usado como Item)
-- ✅ `list_books()`, `get_book()`, `create_book()`, `update_book()`, `delete_book()`
-
-### Analytics Query Functions
-- ❌ `get_revenue_per_book(session)` — requirement #5
-- ❌ `get_expenses_per_book(session)` — requirement #6
-- ❌ `get_profit_per_book(session)` — requirement #7
-- ❌ `get_total_revenue(session)` — requirement #8
-- ❌ `get_total_expenses(session)` — requirement #9
-- ❌ `get_total_profit(session)` — requirement #10
-- ❌ `get_avg_purchase_per_book(session)` — requirement #11
-- ❌ `get_avg_purchase_all(session)` — requirement #12
-- ❌ `get_top_profit_book(session)` — requirement #13
-- ❌ `get_revenue_last_hour(session)` — requirement #14
-- ❌ `get_expenses_last_hour(session)` — requirement #15
-- ❌ `get_profit_last_hour(session)` — requirement #16
-- ❌ `get_highest_sales_by_country(session, book_id)` — requirement #17
+| Req | Descrição | API | MCP Tool | Kafka Streams | Sink Connector | BD |
+|---|---|---|---|---|---|---|
+| #1 | Add country | ✅ | ✅ | — | — | ✅ |
+| #2 | List countries | ✅ | ✅ | — | — | ✅ |
+| #3 | Add item (book) | ⚠️ Bug #2 | ⚠️ Bug #2 | — | — | ⚠️ |
+| #4 | List items (books) | ✅ | ✅ | — | — | ✅ |
+| #5 | Revenue per book | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ✅ | ✅ |
+| #6 | Expenses per book | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ✅ | ✅ |
+| #7 | Profit per book | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ✅ | ✅ |
+| #8 | Total revenue | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ✅ | ✅ |
+| #9 | Total expenses | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #10 | Total profit | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #11 | Avg purchase/book | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #12 | Avg purchase all | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #13 | Top profit book | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #14 | Revenue last hour | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #15 | Expenses last hour | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
+| #16 | Profit last hour | ⚠️ Bug #1 | ⚠️ Bug #1 | ❌ Bug #7 | ❌ | ✅ |
+| #17 | Top country/book | ⚠️ Bug #1 | ⚠️ Bug #1 | ⚠️ Bug #3 | ❌ Bug #4 | ✅ |
 
 ---
 
-## 3. MCP SERVER (api/mcp_server.py)
+## O Que Está Implementado (mas precisa de fix)
 
-**Status**: ✅ Parcialmente completo (Analytics em falta)
+### Models (api/app/models.py) ✅
+- Author, AuthorCreate, AuthorUpdate
+- Book, BookCreate, BookUpdate (com `cost_price`, `sale_price`, `author_id`)
+- Country, CountryCreate, CountryUpdate
+- PurchaseEvent, SaleEvent, ResultEvent
 
-### Library Tools
-- ✅ `list_books_tool()`, `get_book_tool()`, `create_book_tool()`, `update_book_tool()`, `delete_book_tool()`
-- ✅ `list_authors_tool()`, `get_author_tool()`, `create_author_tool()`, `update_author_tool()`, `delete_author_tool()`
-- ✅ `create_author_from_text_tool()`
+### Services (api/app/services.py) ✅ (implementado, ⚠️ nomes de tabelas errados)
+- Author CRUD completo
+- Book CRUD completo
+- Country CRUD completo
+- Todas as 13 funções de analytics (queries com nomes de tabelas incorretos — Bug #1)
 
-### Country Tools (Requirements #1-2)
-- ✅ `list_countries_tool()` — requirement #2
-- ✅ `get_country_tool(country_id)`
-- ✅ `create_country_tool(name, region)` — requirement #1
-- ✅ `update_country_tool(country_id, name, region)`
-- ✅ `delete_country_tool(country_id)`
+### REST API (api/main.py) ✅
+- CRUD: `/authors`, `/books`, `/countries`
+- Analytics: `/analytics/stats/*` (13 endpoints)
+- Dashboard: `/analytics/stats/dashboard`
 
-### Resources
-- ✅ `library://catalog-summary`
-- ✅ `library://authors-summary`
-- ✅ `library://countries-summary`
+### MCP Server (api/mcp_server.py) ✅
+- Tools CRUD para Author, Book, Country
+- 13 tools de analytics (Req #5–17)
+- Tools Kafka: `create_purchase_event`, `create_sale_event`, `create_test_transactions`
+- Resources: `library://catalog-summary`, `library://authors-summary`, `library://countries-summary`
 
-### Analytics Tools (FALTA — Requirements #5-17)
-- ❌ `get_revenue_per_book_tool()` — requirement #5
-- ❌ `get_expenses_per_book_tool()` — requirement #6
-- ❌ `get_profit_per_book_tool()` — requirement #7
-- ❌ `get_total_revenue_tool()` — requirement #8
-- ❌ `get_total_expenses_tool()` — requirement #9
-- ❌ `get_total_profit_tool()` — requirement #10
-- ❌ `get_avg_purchase_per_book_tool()` — requirement #11
-- ❌ `get_avg_purchase_all_tool()` — requirement #12
-- ❌ `get_top_profit_book_tool()` — requirement #13
-- ❌ `get_revenue_last_hour_tool()` — requirement #14
-- ❌ `get_expenses_last_hour_tool()` — requirement #15
-- ❌ `get_profit_last_hour_tool()` — requirement #16
-- ❌ `get_highest_sales_by_country_tool()` — requirement #17
+### Kafka Streams (kafka/src/) ✅ topology, ⚠️ não produz output
+- 13 métricas definidas na topology
+- MetricEvent POJO + Serde
+- Windowed aggregations para última hora
 
-### Prompt
-- ⚠️ `library_assistant_prompt()` — existe mas não inclui contexto de shop/analytics
+### Base de Dados ✅
+- Persistência via Docker volume (`postgres_data`)
+- Tabelas de analytics criadas pelo init SQL
+- Tabelas CRUD geridas pelo SQLModel
 
 ---
 
-## 4. REST API (api/main.py)
+## Plano de Fix (por ordem)
 
-**Status**: ✅ Parcialmente completo (Analytics são placeholders)
-
-### Books
-- ✅ `GET /books`, `GET /books/{id}`, `POST /books`, `PATCH /books/{id}`, `DELETE /books/{id}`
-
-### Authors
-- ✅ `GET /authors`, `GET /authors/{id}`, `POST /authors`, `PATCH /authors/{id}`, `DELETE /authors/{id}`
-
-### Countries
-- ✅ `GET /countries`, `GET /countries/{id}`, `POST /countries`, `PATCH /countries/{id}`, `DELETE /countries/{id}`
-
-### Analytics (placeholders — precisam de dados reais do Kafka)
-- ⚠️ `GET /analytics/stats/revenue-per-book` — placeholder
-- ⚠️ `GET /analytics/stats/expenses-per-book` — placeholder
-- ⚠️ `GET /analytics/stats/profit-per-book` — placeholder
-- ⚠️ `GET /analytics/stats/total-revenue` — placeholder
-- ⚠️ `GET /analytics/stats/total-expenses` — placeholder
-- ⚠️ `GET /analytics/stats/total-profit` — placeholder
-- ⚠️ `GET /analytics/stats/average-purchase-per-book` — placeholder
-- ⚠️ `GET /analytics/stats/average-purchase-all-books` — placeholder
-- ⚠️ `GET /analytics/stats/top-profit-book` — placeholder
-- ⚠️ `GET /analytics/stats/revenue-last-hour` — placeholder
-- ⚠️ `GET /analytics/stats/expenses-last-hour` — placeholder
-- ⚠️ `GET /analytics/stats/profit-last-hour` — placeholder
-- ⚠️ `GET /analytics/stats/top-country-sales-per-book` — placeholder
-
----
-
-## 5. KAFKA STREAMS (kafka/src/)
-
-**Status**: ✅ Compilado e funcional
-
-Métricas implementadas via Kafka Streams e escritas no PostgreSQL:
-- ✅ `revenue_by_book` — revenue por livro
-- ✅ `expenses_by_book` — expenses por livro
-- ✅ `profit_by_book` — profit por livro
-- ✅ `total_revenue` — revenue total
-- ✅ `total_expenses` — expenses total
-- ✅ `total_profit` — profit total
-- ✅ `avg_purchase_by_book` — compra média por livro
-- ✅ `avg_purchase_all` — compra média global
-- ✅ `top_profit_book` — livro com maior lucro
-- ✅ `revenue_last_hour` — revenue na última hora (windowed)
-- ✅ `expenses_last_hour` — expenses na última hora (windowed)
-
----
-
-## O Que Falta
-
-### Fase 1: Analytics Services
-Implementar em `api/app/services.py` funções que lêem as tabelas do PostgreSQL preenchidas pelo Kafka Streams.
-
-### Fase 2: Analytics MCP Tools
-Implementar em `api/mcp_server.py` os 13 tools de analytics (requirements #5-17).
-
-### Fase 3: Conectar REST API ao PostgreSQL real
-Substituir os placeholders em `api/main.py` por chamadas reais às funções de services.
-
-### Fase 4: Testar End-to-End
-- Kafka Streams a correr → escreve em PostgreSQL
-- FastAPI a ler PostgreSQL
-- LangChain Agent a chamar MCP tools
-- Webapp a funcionar
+1. **Fix Bug #2**: Atualizar `kafka/sql/create_tables.sql` — adicionar `authors` table e colunas FK em `books`
+2. **Fix Bug #3**: Examinar logs Kafka Streams, identificar e corrigir erro de serialização
+3. **Fix Bug #5**: Remover `broker2` do bootstrap servers em `ProjetoBase3Streams.java`
+4. **Fix Bug #6**: Mudar `Serdes.Double()` para `metricSerde` na linha 117
+5. **Fix Bug #4**: Criar 9 sink connectors em falta em `kafka/config/`
+6. **Fix Bug #1**: Corrigir queries em `services.py` para usar nomes reais das tabelas
+7. **Fix Bug #7**: Implementar profit-last-hour no Kafka Streams (join de windowed tables)

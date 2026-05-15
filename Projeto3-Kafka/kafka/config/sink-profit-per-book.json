@@ -1,24 +1,26 @@
 {
     "name": "jdbc-sink-profit-per-book",
     "config": {
-        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
         "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
         "dialect.name": "PostgreSqlDatabaseDialect",
         "tasks.max": "1",
         "topics": "Results-profit-per-book",
         "table.name.format": "profit_by_book",
         "auto.create": "false",
-        "auto.evolve": "true",
+        "auto.evolve": "false",
         "insert.mode": "upsert",
-        "pk.mode": "record_key",
+        "pk.mode": "record_value",
         "pk.fields": "book_id",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
         "value.converter.schemas.enable": "false",
-        "transforms": "ValueToKey,ExtractValue",
-        "transforms.ValueToKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
-        "transforms.ValueToKey.fields": "key",
-        "transforms.ExtractValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-        "transforms.ExtractValue.exclude": "key,timestamp"
+        "transforms": "ExtractKeyToValue,RenameValue,DropMetaFields",
+        "transforms.ExtractKeyToValue.type": "org.apache.kafka.connect.transforms.HoistField$Key",
+        "transforms.ExtractKeyToValue.field": "book_id",
+        "transforms.RenameValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.RenameValue.renames": "value:profit",
+        "transforms.DropMetaFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.DropMetaFields.exclude": "key,timestamp"
     }
 }
