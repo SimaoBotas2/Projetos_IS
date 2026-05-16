@@ -1,9 +1,8 @@
-1. Run post_connectors.sh (in config folder context)
-2. Run producers (*Producer.java)
-3. Run Proje3Streams.java
-
+1. Run post_connectors.sh (inside command-line container, from /workspace/config)
+2. Run producers (PurchaseEventProducer and SaleEventProducer) or use MCP tools
+3. Run ProjetoBase3Streams
 
 Checks:
-1. check with kafka-topics.sh --bootstrap-server broker1:9092 --list
-2. see data in postgre container
-3. hookup to the producer streams with kafka-console-consumer.sh --bootstrap-server broker1:9092 --include "Proj3SockPurchasesTopic|Proj3SockSalesTopic" --from-beginning
+1. check topics:   kafka-topics.sh --bootstrap-server broker1:9092 --list
+2. see data in DB: psql -U postgres -d project3 -c "SELECT * FROM revenue_by_book;"
+3. watch results:  kafka-console-consumer.sh --bootstrap-server broker1:9092 --topic Results-revenue-per-book --from-beginning

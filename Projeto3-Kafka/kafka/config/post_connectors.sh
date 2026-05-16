@@ -2,10 +2,23 @@
 
 BASE_URL="http://connect:8083/connectors"
 
+delete_if_exists() {
+    name=$1
+    status=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/$name)
+    if [ "$status" = "200" ]; then
+        echo "  Deleting existing $name..."
+        curl -s -X DELETE $BASE_URL/$name
+        sleep 1
+    fi
+}
+
 post() {
-    echo "Registering $1..."
-    curl -s -X POST -H "Accept:application/json" -H "Content-Type:application/json" $BASE_URL -d @$1
-    echo ""
+    file=$1
+    name=$(grep '"name"' $file | head -1 | sed 's/.*"name": *"\([^"]*\)".*/\1/')
+    echo "Registering $name..."
+    delete_if_exists $name
+    curl -s -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+        $BASE_URL -d @$file | grep -q '"name"' && echo "  ✓ OK" || echo "  ✗ FAILED"
 }
 
 # Source connector (DB → Kafka)

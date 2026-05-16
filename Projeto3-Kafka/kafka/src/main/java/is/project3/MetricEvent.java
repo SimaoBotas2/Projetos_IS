@@ -20,6 +20,12 @@ public class MetricEvent {
         this.timestamp = timestamp;
     }
 
+    /**
+     * Kept for internal Kafka Streams deserialization only.
+     * JDBC Sink connectors no longer use this format directly —
+     * they receive purpose-built schema+payload JSON from the helper methods
+     * in ProjetoBase3Streams.
+     */
     public JsonObject toJson() {
         JsonObject obj = new JsonObject();
         obj.addProperty("key", key);
@@ -29,10 +35,12 @@ public class MetricEvent {
     }
 
     public static MetricEvent fromJson(JsonObject json) {
+        // Support both plain JSON and schema+payload envelope (from Connect)
+        JsonObject data = json.has("payload") ? json.getAsJsonObject("payload") : json;
         return new MetricEvent(
-            json.get("key").getAsString(),
-            json.get("value").getAsDouble(),
-            json.get("timestamp").getAsLong()
+            data.get("key").getAsString(),
+            data.get("value").getAsDouble(),
+            data.get("timestamp").getAsLong()
         );
     }
 

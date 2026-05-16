@@ -14,14 +14,6 @@
         "pk.fields": "metric_name",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-        "value.converter.schemas.enable": "false",
-        "transforms": "AddMetricName,RenameValue,DropMetaFields",
-        "transforms.AddMetricName.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-        "transforms.AddMetricName.static.field": "metric_name",
-        "transforms.AddMetricName.static.value": "average_purchase",
-        "transforms.RenameValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-        "transforms.RenameValue.renames": "value:metric_value",
-        "transforms.DropMetaFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-        "transforms.DropMetaFields.exclude": "key,timestamp"
+        "value.converter.schemas.enable": "true"
     }
 }

@@ -10,17 +10,10 @@
         "auto.create": "false",
         "auto.evolve": "false",
         "insert.mode": "upsert",
-        "pk.mode": "kafka",
-        "pk.fields": "book_country_key",
+        "pk.mode": "record_value",
+        "pk.fields": "book_id,country_id",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-        "value.converter.schemas.enable": "false",
-        "transforms": "ExtractKeyToValue,RenameValue,DropMetaFields",
-        "transforms.ExtractKeyToValue.type": "org.apache.kafka.connect.transforms.HoistField$Key",
-        "transforms.ExtractKeyToValue.field": "book_country_key",
-        "transforms.RenameValue.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-        "transforms.RenameValue.renames": "value:revenue",
-        "transforms.DropMetaFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-        "transforms.DropMetaFields.exclude": "key,timestamp"
+        "value.converter.schemas.enable": "true"
     }
 }

@@ -185,4 +185,7 @@ docker compose -f .devcontainer/docker-compose-standalone.yml down -v
 
 ## Problemas Conhecidos
 
-Ver `docs/ROADMAP.md` secção "Bugs Conhecidos" para lista completa.
+- **Req #16 (Profit última hora)** não está implementado no Kafka Streams — requer join entre duas windowed KTables, que o Kafka Streams não suporta diretamente. Workaround: calcular na API como `revenue_last_hour - expenses_last_hour`.
+- Os tópicos `Results-*` devem estar **vazios ou com mensagens no formato schema+payload** para os connectors funcionarem. Se houver mensagens antigas em formato plain JSON, apagar os tópicos e reiniciar o Kafka Streams.
+
+Ver `docs/ROADMAP.md` para o estado detalhado dos requisitos.

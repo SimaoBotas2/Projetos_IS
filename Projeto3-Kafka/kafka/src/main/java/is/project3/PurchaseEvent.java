@@ -31,9 +31,11 @@ public class PurchaseEvent {
     }
 
     public static PurchaseEvent fromJson(JsonObject json) {
+        int supplierId = json.has("supplier_id") && !json.get("supplier_id").isJsonNull()
+            ? json.get("supplier_id").getAsInt() : 0;
         return new PurchaseEvent(
             json.get("book_id").getAsInt(),
-            json.get("supplier_id").getAsInt(),
+            supplierId,
             json.get("cost").getAsDouble(),
             json.get("quantity").getAsInt(),
             json.get("timestamp").getAsLong()

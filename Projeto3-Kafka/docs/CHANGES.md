@@ -175,15 +175,15 @@ def delete_country(session: Session, country_id: int) -> dict:
 - [x] Models verificados (Country já existe)
 - [x] Services expandido (Country CRUD completo)
 - [x] MCP Server com Country tools (5 tools + 1 resource)
-- [ ] Teste de conexão com banco
-- [ ] Teste do LangChain Agent
-- [ ] Teste do webapp
+- [x] Teste de conexão com banco
+- [x] LangChain Agent funcional com tools MCP
+- [x] Webapp funcional
 
-## Próximas Fases (Para Depois)
+## Fases Completadas Posteriormente
 
-- [ ] Adicionar Analytics Models em models.py
-- [ ] Adicionar Analytics Query Functions em services.py
-- [ ] Adicionar Analytics Tools em mcp_server.py (13+ tools)
-- [ ] Testar integração end-to-end
-- [ ] Treinar LangChain Agent com novos tools
+- [x] Analytics Models em models.py
+- [x] Analytics Query Functions em services.py (13 funções, queries corretas)
+- [x] Analytics Tools em mcp_server.py (13+ tools)
+- [x] Pipeline Kafka Streams → Kafka Connect → PostgreSQL a funcionar
+- [x] Schema+payload JSON fix (ver SESSION_STATE.md)
 
