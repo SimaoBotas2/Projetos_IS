@@ -1,0 +1,19 @@
+{
+    "name": "jdbc-sink-profit-last-hour",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://database:5432/project3?user=postgres&password=nopass",
+        "dialect.name": "PostgreSqlDatabaseDialect",
+        "tasks.max": "1",
+        "topics": "Results-profit-last-hour",
+        "table.name.format": "time_window_metrics",
+        "auto.create": "false",
+        "auto.evolve": "false",
+        "insert.mode": "upsert",
+        "pk.mode": "record_value",
+        "pk.fields": "metric_type",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true"
+    }
+}

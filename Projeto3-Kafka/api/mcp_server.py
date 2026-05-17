@@ -468,6 +468,18 @@ def get_profit_last_hour_tool() -> dict:
 
 
 @mcp.tool()
+def get_profit_last_hour_tool() -> dict:
+    """Get profit in last hour computed by Kafka Streams. Requirement #16: Profit last hour."""
+    with Session(engine) as session:
+        try:
+            return get_profit_last_hour(session)
+        except Exception as exc:
+            print(f"MCP ERROR in get_profit_last_hour_tool: {exc}")
+            traceback.print_exc()
+            raise
+
+
+@mcp.tool()
 def get_top_country_sales_per_book_tool() -> list[dict]:
     """Get country with highest sales per book computed by Kafka Streams. Requirement #17: Top sales by country per item."""
     with Session(engine) as session:

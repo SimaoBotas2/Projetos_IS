@@ -3,7 +3,8 @@ setlocal
 
 set "ROOT_DIR=%~dp0"
 set "APP_DIR=%ROOT_DIR%..\api\"
-for %%I in ("%ROOT_DIR%..\..\.venv\Scripts\python.exe") do set "PYTHON_EXE=%%~fI"
+set "PYTHON_EXE="
+for %%I in ("%ROOT_DIR%..\api\.venv\Scripts\python.exe" "%ROOT_DIR%..\..\.venv\Scripts\python.exe") do if not defined PYTHON_EXE if exist "%%~fI" set "PYTHON_EXE=%%~fI"
 
 if not exist "%APP_DIR%" (
     echo [ERROR] Pasta do projeto nao encontrada: "%APP_DIR%"

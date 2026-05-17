@@ -41,6 +41,7 @@ post sink-top-profit-book.json
 # Sink connectors — windowed → time_window_metrics table
 post sink-revenue-last-hour.json
 post sink-expenses-last-hour.json
+post sink-profit-last-hour.json
 
 echo ""
 echo "All 13 connectors registered!"

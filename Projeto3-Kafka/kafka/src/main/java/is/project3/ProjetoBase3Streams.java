@@ -224,9 +224,9 @@ public class ProjetoBase3Streams {
             .map((k, v) -> new KeyValue<>(k, bookMetricJson("revenue", Integer.parseInt(k), v)))
             .to("Results-revenue-per-book", Produced.with(Serdes.String(), Serdes.String()));
 
-        // Total revenue: aggregate all sales under key "total_revenue"
+        // Total revenue: aggregate all sales under a shared key for total metrics
         KTable<String, Double> totalRevenue = sales
-            .map((k, v) -> new KeyValue<>("total_revenue", v))
+            .map((k, v) -> new KeyValue<>("total_metrics", v))
             .groupByKey(Grouped.with(Serdes.String(), saleSerde))
             .aggregate(
                 () -> 0.0,
@@ -260,7 +260,7 @@ public class ProjetoBase3Streams {
 
         // Total expenses
         KTable<String, Double> totalExpenses = purchases
-            .map((k, v) -> new KeyValue<>("total_expenses", v))
+            .map((k, v) -> new KeyValue<>("total_metrics", v))
             .groupByKey(Grouped.with(Serdes.String(), purchaseSerde))
             .aggregate(
                 () -> 0.0,
@@ -319,7 +319,7 @@ public class ProjetoBase3Streams {
 
         // Purchase count across all books (for global average)
         KTable<String, Long> purchaseCountAll = purchases
-            .map((k, v) -> new KeyValue<>("average_purchase", v))
+            .map((k, v) -> new KeyValue<>("total_metrics", v))
             .groupByKey(Grouped.with(Serdes.String(), purchaseSerde))
             .count(Materialized.with(Serdes.String(), Serdes.Long()));
 
@@ -381,7 +381,19 @@ public class ProjetoBase3Streams {
             .toStream()
             .map((k, v) -> new KeyValue<>(k.key(), windowedMetricJson("expenses_last_hour", v)))
             .to("Results-expenses-last-hour", Produced.with(Serdes.String(), Serdes.String()));
-
+        // Req #16 — profit last hour → time_window_metrics
+        sales
+            .map((k, v) -> new KeyValue<>("profit_last_hour", v))
+            .groupByKey(Grouped.with(Serdes.String(), saleSerde))
+            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
+            .aggregate(
+                () -> 0.0,
+                (key, sale, aggr) -> aggr + (sale.price * sale.quantity),
+                Materialized.with(Serdes.String(), Serdes.Double())
+            )
+            .toStream()
+            .map((k, v) -> new KeyValue<>(k.key(), windowedMetricJson("profit_last_hour", v)))
+            .to("Results-profit-last-hour", Produced.with(Serdes.String(), Serdes.String()));
         // ===== TOP COUNTRY SALES PER BOOK (Req #17) =====
         // Key: "book_id_country_id" (e.g. "1_3"), value: total revenue for that combo
         sales
