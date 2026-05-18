@@ -4,7 +4,7 @@
 
 | Componente | Estado |
 |---|---|
-| Kafka Streams topology (12 métricas) | ✅ Funcional — produz schema+payload JSON |
+| Kafka Streams topology (13 métricas) | ✅ Funcional — produz schema+payload JSON |
 | REST API (CRUD + Analytics) | ✅ Implementado e funcional |
 | MCP Server (todas as tools) | ✅ Implementado |
 | LangChain Agent | ✅ Funcional |
@@ -27,16 +27,6 @@
 
 ---
 
-## Problema Conhecido / Não Implementado
-
-### Req #16 — Profit Última Hora
-
-O `Results-profit-last-hour` não está implementado. Requereria um join entre duas KTables com janela temporal (`windowedBy`), o que em Kafka Streams não é suportado diretamente da forma mais simples.
-
-**Workaround possível**: calcular `profit_last_hour = revenue_last_hour - expenses_last_hour` no lado da API ao ler de `time_window_metrics`.
-
----
-
 ## Estado por Requisito do Assignment
 
 | Req | Descrição | API | MCP Tool | Kafka Streams | Sink Connector | BD |
@@ -56,7 +46,7 @@ O `Results-profit-last-hour` não está implementado. Requereria um join entre d
 | #13 | Top profit book | ✅ | ✅ | ✅ | ✅ | ✅ |
 | #14 | Revenue last hour | ✅ | ✅ | ✅ | ✅ | ✅ |
 | #15 | Expenses last hour | ✅ | ✅ | ✅ | ✅ | ✅ |
-| #16 | Profit last hour | ⚠️ | ⚠️ | ❌ | ❌ | — |
+| #16 | Profit last hour | ✅ | ✅ | ✅ | ✅ | ✅ |
 | #17 | Top country/book | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
@@ -86,7 +76,7 @@ O `Results-profit-last-hour` não está implementado. Requereria um join entre d
 - Tools Kafka: `create_purchase_event`, `create_sale_event`, `create_test_transactions`
 
 ### Kafka Streams (`kafka/src/`) ✅
-- 12 métricas implementadas e a produzir para PostgreSQL
+- 13 métricas implementadas e a produzir para PostgreSQL
 - Schema+payload JSON embutido (sem Schema Registry)
 - `LogAndContinueExceptionHandler` — mensagens malformadas são ignoradas
 - `PurchaseEvent.fromJson()` — `supplier_id` é opcional

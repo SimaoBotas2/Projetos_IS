@@ -44,5 +44,5 @@ post sink-expenses-last-hour.json
 post sink-profit-last-hour.json
 
 echo ""
-echo "All 13 connectors registered!"
+echo "All 14 connectors registered!"
 echo "Check status: curl http://connect:8083/connectors"

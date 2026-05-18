@@ -195,5 +195,4 @@ echo 'All tasks restarted'
 | Issue | Where | Impact |
 |---|---|---|
 | `total_profit` and `average_purchase` may be missing from `total_metrics` | Kafka Streams KTable join needs both Sales+Purchases events | Fix: send more events |
-| Req #16 (profit_last_hour) not implemented | Kafka Streams | Low priority — skipped in assignment if needed |
 | REST API endpoint paths not verified | `api/main.py` | May need to check exact route names |

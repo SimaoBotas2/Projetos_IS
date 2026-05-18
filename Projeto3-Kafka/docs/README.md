@@ -134,9 +134,8 @@ Abre os 3 serviços Python em janelas separadas e lança a webapp no browser.
 | `Results-top-profit-book` | Output | Livro com maior lucro (Req #13) |
 | `Results-revenue-last-hour` | Output | Revenue última hora (Req #14) |
 | `Results-expenses-last-hour` | Output | Expenses última hora (Req #15) |
+| `Results-profit-last-hour` | Output | Profit última hora (Req #16) |
 | `Results-top-country-sales-per-book` | Output | Vendas por país/livro (Req #17) |
-
-> **Nota**: Req #16 (profit última hora) não está implementado no Kafka Streams.
 
 ---
 
@@ -155,7 +154,7 @@ Abre os 3 serviços Python em janelas separadas e lança a webapp no browser.
 | Livro com maior lucro | `Results-top-profit-book` | `total_metrics` | #13 |
 | Revenue última hora | `Results-revenue-last-hour` | `time_window_metrics` | #14 |
 | Expenses última hora | `Results-expenses-last-hour` | `time_window_metrics` | #15 |
-| ~~Profit última hora~~ | ~~`Results-profit-last-hour`~~ | — | ~~#16~~ ❌ |
+| Profit última hora | `Results-profit-last-hour` | `time_window_metrics` | #16 |
 | Vendas por país/livro | `Results-top-country-sales-per-book` | `best_performing_by_country` | #17 |
 
 ---
@@ -185,7 +184,6 @@ docker compose -f .devcontainer/docker-compose-standalone.yml down -v
 
 ## Problemas Conhecidos
 
-- **Req #16 (Profit última hora)** não está implementado no Kafka Streams — requer join entre duas windowed KTables, que o Kafka Streams não suporta diretamente. Workaround: calcular na API como `revenue_last_hour - expenses_last_hour`.
 - Os tópicos `Results-*` devem estar **vazios ou com mensagens no formato schema+payload** para os connectors funcionarem. Se houver mensagens antigas em formato plain JSON, apagar os tópicos e reiniciar o Kafka Streams.
 
 Ver `docs/ROADMAP.md` para o estado detalhado dos requisitos.

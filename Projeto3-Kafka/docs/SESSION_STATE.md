@@ -136,10 +136,6 @@ done
 Both require KTable joins to work. They need both Sales AND Purchases events before they appear.
 Send more events (with proper supplier_id) to trigger both joins.
 
-### No profit_last_hour (Req #16)
-Requires joining two windowed KTables — complex in Kafka Streams. Currently not implemented.
-Consider implementing as: compute separately and join with a GlobalKTable.
-
 ### REST API Not Verified
 The REST API (FastAPI in /api/) has analytics query functions that read from the PostgreSQL tables.
 These need to be tested end-to-end now that the tables have real data.
