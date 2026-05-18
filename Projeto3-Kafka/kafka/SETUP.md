@@ -1,202 +1,96 @@
-# Setup do Projeto Kafka - TP3
+# How to Run
 
-## Pré-requisitos
-- Docker & Docker Compose instalados
-- Workspace aberto em VS Code com Dev Container (opcional, mas recomendado)
-
----
-
-## 1. Arrancar os Containers
-
-A partir da pasta `kafka/`:
-
-```bash
-docker compose -f .devcontainer/docker-compose-standalone.yml up -d
-```
-
-Isto arranca:
-- **database**: PostgreSQL (porta 5433 no host, 5432 interno)
-- **broker1**: Apache Kafka (porta 29092 externa, 9092 interna)
-- **connect**: Kafka Connect (porta 8083)
-- **command-line**: Container para correr comandos e a aplicação Java
-
-Verificar status:
-```bash
-docker compose -f .devcontainer/docker-compose-standalone.yml ps
-```
-
----
-
-## 2. Entrar no Container `command-line`
-
-```bash
-docker compose -f .devcontainer/docker-compose-standalone.yml exec command-line bash
-```
-
-Todos os comandos seguintes correm **dentro deste container**.
-
----
-
-## 3. Compilar o Projeto Maven
-
-Dentro do container:
-
-```bash
-cd /workspace
-mvn clean package -DskipTests
-```
-
-Isto gera `target/project3-jar-with-dependencies.jar` com todas as dependências (Kafka Streams, Kafka Clients, GSON, etc).
-
----
-
-## 4. Criar Tópicos de Input (se não existirem)
-
-```bash
-kafka-topics.sh --bootstrap-server broker1:9092 --create --topic Purchases --partitions 1 --replication-factor 1 --if-not-exists
-kafka-topics.sh --bootstrap-server broker1:9092 --create --topic Sales --partitions 1 --replication-factor 1 --if-not-exists
-```
-
----
-
-## 5. Registar os Kafka Connect Connectors
-
-Dentro do container:
-
-```bash
-cd /workspace/config
-./post_connectors.sh
-```
-
-Isto registra **13 conectores** (1 source + 12 sink). O script é idempotente — apaga os existentes antes de re-registar.
-
-Verificar conectores:
-```bash
-curl http://connect:8083/connectors
-```
-
----
-
-## 6. Verificar Tópicos Kafka
-
-```bash
-kafka-topics.sh --bootstrap-server broker1:9092 --list
-```
-
-Deves ver: `Purchases`, `Sales`, e todos os `Results-*` topics.
-
----
-
-## 7. Correr Producers
-
-Dentro do container, após compilação:
-
-```bash
-# Producer de compras (loop contínuo)
-java -cp target/project3-jar-with-dependencies.jar is.project3.PurchaseEventProducer
-
-# Producer de vendas (loop contínuo)
-java -cp target/project3-jar-with-dependencies.jar is.project3.SaleEventProducer
-```
-
-Alternativamente, usa as MCP tools (`create_purchase_event`, `create_sale_event`) via agente IA.
-
----
-
-## 8. Correr Kafka Streams
-
-Dentro do container:
-
-```bash
-java -jar target/project3-jar-with-dependencies.jar is.project3.ProjetoBase3Streams
-```
-
-Ou em background:
-```bash
-java -jar target/project3-jar-with-dependencies.jar > /tmp/streams.log 2>&1 &
-```
-
----
-
-## 9. Verificar Dados no PostgreSQL
-
-Dentro do container (ou no host na porta 5433):
-
-```bash
-psql -U postgres -d project3 -c "SELECT * FROM revenue_by_book;"
-psql -U postgres -d project3 -c "SELECT * FROM total_metrics;"
-psql -U postgres -d project3 -c "SELECT * FROM time_window_metrics;"
-```
-
----
-
-## 10. Consumir Mensagens (Verificação)
-
-```bash
-# Ver eventos de venda
-kafka-console-consumer.sh --bootstrap-server broker1:9092 --topic Sales --from-beginning
-
-# Ver resultados Kafka Streams (formato schema+payload JSON)
-kafka-console-consumer.sh --bootstrap-server broker1:9092 --topic Results-revenue-per-book --from-beginning
-```
-
----
-
-## 11. Parar os Containers
-
-Fora do container (no host):
+## 1. Clean Start (reset everything)
 
 ```bash
 cd kafka
-docker compose -f .devcontainer/docker-compose-standalone.yml down
+docker compose -f .devcontainer/docker-compose-cluster.yml down -v
 ```
 
 ---
 
-## 12. Reset Completo (Volumes Incluídos)
+## 2. Start the Stack
 
 ```bash
-cd kafka
-docker compose -f .devcontainer/docker-compose-standalone.yml down -v
+docker compose -f .devcontainer/docker-compose-cluster.yml up -d
 ```
 
-Isto apaga todos os dados do PostgreSQL e offsets do Kafka.
+Wait ~60s, then verify Kafka Connect is ready:
+```bash
+curl -s http://localhost:8083/connectors
+```
+Should return `[]`.
 
 ---
 
-## Troubleshooting
+## 3. Build (if needed)
 
-**Erro: `connect:8083 refused`**
-→ Verifica se estás dentro do container `command-line` (não no host Windows).
-
-**Connector em estado FAILED**
 ```bash
-# Ver erro
-curl http://connect:8083/connectors/<nome>/status
-
-# Reiniciar task do connector
-curl -X POST http://connect:8083/connectors/<nome>/tasks/0/restart
+docker exec devcontainer-command-line-1 bash -c "cd /workspace && mvn clean package -DskipTests -q"
 ```
 
-**Re-registar todos os connectors**
+---
+
+## 4. Register Connectors
+
 ```bash
-cd /workspace/config && ./post_connectors.sh
+docker exec devcontainer-command-line-1 bash -c "sed -i 's/\r//' /workspace/config/post_connectors.sh && cd /workspace/config && bash post_connectors.sh"
 ```
 
-**Reset do consumer group (re-processar desde o início)**
+Should print `✓ OK` for all 14 connectors.
+
+---
+
+## 5. Create Input Topics
+
 ```bash
-kafka-consumer-groups.sh --bootstrap-server broker1:9092 \
-  --group project3-analytics-streams \
-  --reset-offsets --to-earliest \
-  --topic Sales --topic Purchases --execute
+docker exec devcontainer-command-line-1 bash -c "
+kafka-topics.sh --create --if-not-exists --bootstrap-server broker1:9092 --topic Sales --partitions 3 --replication-factor 3
+kafka-topics.sh --create --if-not-exists --bootstrap-server broker1:9092 --topic Purchases --partitions 3 --replication-factor 3
+"
 ```
 
-**Limpar tópicos Results-* com mensagens antigas**
+---
+
+## 6. Start Kafka Streams
+
 ```bash
-for topic in Results-revenue-per-book Results-expenses-per-book Results-profit-per-book \
-  Results-avg-purchase-per-book Results-avg-purchase-all Results-total-revenue \
-  Results-total-expenses Results-total-profit Results-top-profit-book \
-  Results-revenue-last-hour Results-expenses-last-hour Results-top-country-sales-per-book; do
-  kafka-topics.sh --bootstrap-server broker1:9092 --delete --topic $topic
+docker exec -d devcontainer-command-line-1 bash -c "java -jar /workspace/target/project3-jar-with-dependencies.jar > /tmp/streams.log 2>&1"
+```
+
+---
+
+## 7. Start Python API
+
+```bat
+scripts\start_all.bat
+```
+
+---
+
+## 8. Verify Everything is Working
+
+```bash
+docker exec devcontainer-database-1 psql -U postgres -d project3 -c "SELECT * FROM total_metrics;"
+```
+
+If empty, send test events and wait ~15s:
+```bash
+docker exec -it devcontainer-command-line-1 bash -c "
+NOW=\$(date +%s%3N)
+for i in 1 2 3; do
+  echo '{\"book_id\":1,\"country_id\":1,\"price\":15.00,\"quantity\":2,\"timestamp\":'\$NOW'}' | kafka-console-producer.sh --bootstrap-server broker1:9092 --topic Sales 2>/dev/null
+  echo '{\"book_id\":2,\"country_id\":2,\"price\":22.00,\"quantity\":1,\"timestamp\":'\$NOW'}' | kafka-console-producer.sh --bootstrap-server broker1:9092 --topic Sales 2>/dev/null
+  echo '{\"book_id\":1,\"supplier_id\":1,\"cost\":10.00,\"quantity\":2,\"timestamp\":'\$NOW'}' | kafka-console-producer.sh --bootstrap-server broker1:9092 --topic Purchases 2>/dev/null
+  echo '{\"book_id\":2,\"supplier_id\":2,\"cost\":15.00,\"quantity\":1,\"timestamp\":'\$NOW'}' | kafka-console-producer.sh --bootstrap-server broker1:9092 --topic Purchases 2>/dev/null
 done
+"
+```
+
+---
+
+## 9. Stop
+
+```bash
+docker compose -f .devcontainer/docker-compose-cluster.yml down
 ```

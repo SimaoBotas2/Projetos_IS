@@ -1,0 +1,6 @@
+# Force LF line endings for shell scripts (prevent CRLF issues on Linux containers)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Normalise all other text files
+* text=auto
